@@ -207,6 +207,36 @@ function theme_flag_friend_pending_flags($account, $flags) {
 }
 
 /**
+ * Implementation of hook_user().
+ */
+function flag_friend_user($op, &$edit, &$account, $category = NULL) {
+  switch ($op) {
+    case 'form':
+      // The user account edit form is about to be displayed. The module should present the form elements it wishes to inject into the form.
+      $form = array();
+      $form['friend_notification'] = array(
+        '#type' => 'select',
+        '#title' => t('I would like to be notified when someone wants to be friends with me'),
+        '#multiple' => FALSE,
+        '#options' => array(1 => 'Yes', 0 => 'No'),
+        '#default_value' => variable_get('flag_friend_notification', 0),
+      );      
+      return $form;
+      break;
+    case 'load':
+      $account->friend_notification = variable_get('flag_friend_notification', 0);
+      break;
+    case 'update':
+      $notice = $edit['friend_notification'];
+      $current = variable_get('flag_friend_notification', 0);
+      if ($notice != $current) {
+        variable_set('flag_friend_notification', $edit['friend_notification']);
+      }
+      break;
+  } 
+}
+
+/**
  * Implementation of hook_user_link().
  */
 function flag_friend_user_link($account) {
@@ -420,13 +450,15 @@ function flag_friend_message($action, $flag, $content_id, $account_uid) {
 
 function flag_friend_message_email($status, $flag, $recipient_uid, $sender) {
   $recipient = user_load(array('uid' => $recipient_uid));
-  $email = theme('flag_friend_message_email', $status, $flag, $recipient, $sender);
-  if (function_exists('messaging_message_send_user')) {
-    messaging_message_send_user($recipient, $email, NULL, 1);
-  }
-  else {
-    drupal_mail($email['type'], $recipient->mail, $email['subject'], $email['body']);  
-  }  
+  if ($recipient->friend_notification) {
+    $email = theme('flag_friend_message_email', $status, $flag, $recipient, $sender);
+    if (function_exists('messaging_message_send_user')) {
+      messaging_message_send_user($recipient, $email, NULL, 1);
+    }
+    else {
+      drupal_mail($email['type'], $recipient->mail, $email['subject'], $email['body']);  
+    }
+  }   
 }
 
 /**
