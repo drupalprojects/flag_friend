@@ -244,11 +244,16 @@ function flag_friend_unfriend_confirm($action = 'flag', $flag_name, $content_id 
   );
   $form['#theme'] = 'flag_friend_unfriend_form';
   
-  if ($status == FLAG_FRIEND_APPROVAL) {
-    $question = t('Are you sure you want to deny this friend request?');
-  }
-  else {
-    $question = $flag->get_label('unflag_confirmation', $content_id);
+  switch ($status) {
+    case FLAG_FRIEND_FLAGGED:
+      $question = t('Are you sure you want to remove this user from your list of friends?');
+    break;
+    case FLAG_FRIEND_APPROVAL:
+      $question = t('Are you sure you don\'t want to be friends with this user?');
+      break;
+    default:
+      $question = $flag->get_label('unflag_confirmation', $content_id);
+      break;
   }
   $path = isset($_GET['destination']) ? $_GET['destination'] : '<front>';
   $yes = $flag->get_label('unflag_short', $content_id);  
