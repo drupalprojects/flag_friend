@@ -9,35 +9,19 @@ function flag_friend_install() {
   switch($GLOBALS['db_type']) {
     case 'mysql':    // use same as mysqli
     case 'mysqli':
-      db_query("CREATE TABLE {flag_friend} (
+      db_query("CREATE TABLE IF NOT EXISTS {flag_friend} (
         uid int(10) unsigned NOT NULL,
         friend_uid int(10) unsigned NOT NULL,
         created int(11) default NULL,
         PRIMARY KEY(uid, friend_uid)
       ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       
-      db_query("CREATE TABLE {flag_friend_message} (
+      db_query("CREATE TABLE IF NOT EXISTS {flag_friend_message} (
         fcid smallint unsigned NOT NULL default '0',
-        message text NOT NULL
-      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");     
+        message text NOT NULL,
+        PRIMARY KEY(fcid)
+      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       
-      // create a new flag called friend
-      $options = array(
-        'show_on_page' => 1,
-        'show_on_teaser' => 1,
-        'show_on_form' => 1,
-        'flag_short' => 'Add friend',
-        'flag_long' => 'Add this user to your friends list',
-        'flag_message' => '',
-        'unflag_short' => 'Remove friend',
-        'unflag_long' => 'Remove this user from your friends list',
-        'unflag_message' => '',
-      );
-      db_query("INSERT INTO {flags} (fid, content_type, name, title, roles, global, options) VALUES (%d, 'user', 'friend', 'Friend', '5', 0, '%s')", db_next_id('{flags}_fid'), serialize($options));
-      $result = db_result(db_query("SELECT fid FROM {flags} WHERE name = '%s'", 'friend'));
-      
-      // enable the flag_form module for this flag
-      variable_set('flag_form_enable_'. $result, TRUE);
       $success = TRUE;
       break;
   }
