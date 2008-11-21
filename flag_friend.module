@@ -108,6 +108,25 @@ function flag_friend_menu($may_cache) {
       'access' => user_access('access content'),
       'type' => MENU_CALLBACK,
     );
+    
+    // post means that there isn't a friend
+    // message already
+    $post = TRUE;
+    if (isset($_SESSION['messages']['notice'])) {
+      foreach ($_SESSION['messages']['notice'] as $message) {
+        if (strpos($message, 'pending friend') !== FALSE) {
+          $post = FALSE;
+        }
+      }
+    }
+    
+    if ($post) {
+      // grab the count of the pending friends and output them
+      $flag = flag_get_flag('friend');
+      if ($count = $flag->get_user_count($user->uid)) {
+        drupal_set_message(l(t('You have !count.', array('!count' => format_plural($count, '1 pending friend request', '@count pending friend requests'))), 'user/' . $user->uid . '/friends'), 'notice');
+      }
+    }
   }
   
   return $items;
