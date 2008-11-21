@@ -248,7 +248,7 @@ function flag_friend_unfriend_confirm($action = 'flag', $flag_name, $content_id 
     $question = t('Are you sure you want to deny this friend request?');
   }
   else {
-    $question = $flag->get_label($action .'_confirmation', $content_id);
+    $question = $flag->get_label('unflag_confirmation', $content_id);
   }
   $path = isset($_GET['destination']) ? $_GET['destination'] : '<front>';
   $yes = $flag->get_label('unflag_short', $content_id);  
@@ -558,15 +558,20 @@ function theme_flag_friend_message_email($status, $flag, $recipient, $sender) {
         '!username' => $sender->name, 
         '!site' => 'on '. variable_get('site_name', ''),
         ));
-      $email['body'] = t('!firstname confirmed you as a friend on !site.\n\n
-      To view !firstname\'s profile, follow this link,\n
-      !link\n\n
-      !message\n\n
-      Thanks,\n
+      $email['body'] = t('!firstname confirmed you as a friend on !site.
+      
+      To view !firstname\'s profile, follow this link,
+      !link
+      
+      !message
+      
+      Thanks,
+      
       The !site Team', array(
         '!firstname' => $sender->firstname ? $sender->firstname : $sender->name,
         '!site' => variable_get('site_name', ''),
-        '!message' => $flag->friend_message ? 'Message:\n'. $flag->friend_message : '',
+        '!message' => $flag->friend_message ? 'Message:
+        '. $flag->friend_message : '',
         '!link' => url('user/'. $sender->uid, NULL, NULL, TRUE),
         ));
       break;
@@ -574,16 +579,20 @@ function theme_flag_friend_message_email($status, $flag, $recipient, $sender) {
     case FLAG_FRIEND_PENDING:
       // sender added you as a friend 
       $email['subject'] = t('!username added you as a friend !site', array('!username' => $sender->name, '!site' => 'on '. variable_get('site_name', '')));
-      $email['body'] = t('!firstname added you as a friend on !site. We need to confirm that you know !firstname in order for you to be friends on !site.\n\n 
-      To confirm this friend request, follow the link below:\n 
-      !link\n\n
-      !message\n\n
-      Thanks,\n
+      $email['body'] = t('!firstname added you as a friend on !site. We need to confirm that you know !firstname in order for you to be friends on !site.
+      
+      To confirm this friend request, follow the link below:
+      !link
+      
+      !message
+      
+      Thanks,
       The !site Team', array(
         '!firstname' => $sender->firstname ? $sender->firstname : $sender->name,
         '!site' => variable_get('site_name', ''),
-        '!message' => $flag->friend_message ? 'Message:\n'. $flag->friend_message : '',
-        '!link' => url('user/'. $recipient->uid .'/flag-friend', NULL, NULL, TRUE),
+        '!message' => $flag->friend_message ? 'Message:
+        '. $flag->friend_message : '',
+        '!link' => url('user/'. $recipient->uid .'/friends', NULL, NULL, TRUE),
         ));
       break;
   }
@@ -645,7 +654,7 @@ function flag_friend_flag_default_flags() {
     'flag_confirmation' => 'Are you sure you want to add this user to your list of friends?',
     'unflag_short' => 'Remove friend',
     'unflag_long' => 'Remove this user from your list of friends.',
-    'unflag_confirmation' => 'Are you sure you want to remove this user from your list of friends?',
+    'unflag_confirmation' => 'Are you sure you want to cancel your pending friend request?',
     'status' => FALSE,
     'link_type' => 'confirm',
     'locked' => array('name', 'global', 'link_type'),
