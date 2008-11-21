@@ -123,7 +123,8 @@ function flag_friend_menu($may_cache) {
     if ($post) {
       // grab the count of the pending friends and output them
       $flag = flag_get_flag('friend');
-      if ($count = $flag->get_user_count($user->uid)) {
+      $flags = flag_friend_get_flags($flag, $user->uid);
+      if ($count = count($flags)) {
         drupal_set_message(l(t('You have !count.', array('!count' => format_plural($count, '1 pending friend request', '@count pending friend requests'))), 'user/' . $user->uid . '/friends'), 'notice');
       }
     }
