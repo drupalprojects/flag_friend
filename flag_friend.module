@@ -80,6 +80,7 @@ function flag_friend_perm() {
  * Implementation of hook_init().
  */
 function flag_friend_init() {
+  global $user;
   $flag = flag_get_flag('friend');
   $flags = flag_friend_get_flags($flag, $user->uid);
 
