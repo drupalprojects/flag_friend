@@ -85,7 +85,9 @@ function flag_friend_init() {
   $flags = flag_friend_get_flags($flag, $user->uid);
 
   // display a status message
-  if ($count = count($flags)) {
+  $args[0] = array('user', 'flag');
+  $args[2] = array('friends', 'flag');
+  if ($count = count($flags) && (!in_array(arg(0), $args[0]) || !in_array(arg(2), $args[2]))) {
     drupal_set_message(l(t('You have !count.', array('!count' => format_plural($count, '1 pending friend request', '@count pending friend requests'))), 'user/'. $user->uid .'/friends'), 'notice');
   }
 }
@@ -433,7 +435,14 @@ function flag_friend_form_submit($form, &$form_state) {
   
   if ($form_state['values']['flag_friend_message']) {
     $flag->friend_message = $form_state['values']['flag_friend_message'];
-    flag_friend_message($action, $flag, $content_id, $user->uid);
+    // check the status before trying to record.
+    // we do this because the flag is removed in hook_flag if this status is
+    // true there, which results in an error when trying to save the message
+    // because we have no fcid with which to save. so just email it and do note
+    // record.
+    if ($status !== FLAG_FRIEND_BOTH) {
+      flag_friend_message($action, $flag, $content_id, $user->uid);
+    }
     flag_friend_message_email($status, $flag, $content_id, $user);
     return;
   }
