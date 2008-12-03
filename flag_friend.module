@@ -23,13 +23,13 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
       $status = flag_friend_determine_friend_status($flag, $account->uid, $content_id);
 
       // If both are now flagged, we record the relationship and remove the flags.
-      if ($status == FLAG_FRIEND_BOTH) {
+      if ($status === FLAG_FRIEND_BOTH) {
+        // Since these users have flagged eachother, we create the relationship in the flag_friend table.
+        db_query("INSERT INTO {flag_friend} VALUES(%d, %d, %d)", $account->uid, $content_id, $_SERVER['REQUEST_TIME']);
+
         // Remove any message entries for either user.
         flag_friend_message('unflag', $flag, $account->uid, $content_id);
         flag_friend_message('unflag', $flag, $content_id, $account->uid);
-
-        // Since these users have flagged eachother, we create the relationship in the flag_friend table.
-        db_query("INSERT INTO {flag_friend} VALUES(%d, %d, %d)", $account->uid, $content_id, $_SERVER['REQUEST_TIME']);
 
         // Then remove the flags.
         $flag->flag('unflag', $content_id, $account);
@@ -46,7 +46,12 @@ function flag_friend_preprocess_flag(&$vars) {
   // this hook preprocesses ALL flag links, so make sure we have ours
   if ($vars['flag']->name == 'friend') {
     global $user;
-
+    
+    // Remove link if we're looking at our own so we cannot friend ourself
+    if ($vars['content_id'] == $user->uid) {
+      unset($vars['link_text']);
+    }
+    
     // Determine what the status in the friend process is.
     $status = flag_friend_determine_friend_status($vars['flag'], $user->uid, $vars['content_id']);
     switch ($status) {
@@ -438,16 +443,17 @@ function flag_friend_form_submit($form, &$form_state) {
     // check the status before trying to record.
     // we do this because the flag is removed in hook_flag if this status is
     // true there, which results in an error when trying to save the message
-    // because we have no fcid with which to save. so just email it and do note
+    // because we have no fcid with which to save. so just email it and do not
     // record.
     if ($status !== FLAG_FRIEND_BOTH) {
       flag_friend_message($action, $flag, $content_id, $user->uid);
     }
     flag_friend_message_email($status, $flag, $content_id, $user);
-    return;
   }
-
-  flag_friend_unfriend($action, $flag, $content_id, $user, $status);
+  // the only time we want to unfriend, is if $status = FLAGGED or APPROVAL
+  elseif ($status === FLAG_FRIEND_FLAGGED || $status === FLAG_FRIEND_APPROVAL) {
+    flag_friend_unfriend($action, $flag, $content_id, $user, $status);
+  }
 }
 
 /**
@@ -652,9 +658,6 @@ function flag_friend_theme() {
 
 /**
  * Implementation of hook_flag_default_flags().
- *
- * NOTE: this will not be implemented unless http://drupal.org/node/330141 is
- *       committed to flag.module
  */
 function flag_friend_flag_default_flags() {
   $flags = array();
