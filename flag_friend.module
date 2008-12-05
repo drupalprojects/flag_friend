@@ -98,48 +98,13 @@ function flag_friend_init() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implementation of hook_views_api().
  */
-function flag_friend_menu() {
-  global $user;
-  $items = array();
-  // menu item to see message and respond
-  $items['user/%user/friends'] = array(
-    'title' => 'My friends',
-    'page callback' => 'flag_friend_page',
-    'page arguments' => array(1),
-    'access arguments' => array('access content'),
-    'type' => MENU_LOCAL_TASK,
+function flag_friend_views_api() {
+  return array(
+    'api' => 2.0,
+    'path' => drupal_get_path('module', 'flag_friend') .'/includes',
   );
-
-  return $items;
-}
-
-/**
- * Menu callback for displaying friends.
- */
-function flag_friend_page($account) {
-  global $user;
-  $output = '';
-
-  // make sure that only you can see your own pending friends
-  if ($user->uid == $account->uid) {
-    $flag = flag_get_flag('friend');
-    // display a list of any pending friend requests
-    $flags = flag_friend_get_flags($flag, $account->uid);
-    if (!empty($flags)) {
-      $output .= theme('flag_friend_pending_flags', $account, $flags);
-    }
-  }
-  else {
-    drupal_set_title(t("@name's friends", array('@name' => $account->name)));
-  }
-
-  // display a list of this user's friends
-  $friends = flag_friend_get_friends($account->uid);
-  $output .= theme('flag_friend_friend_list', $account, $friends);
-
-  return $output;
 }
 
 /**
@@ -163,7 +128,7 @@ function flag_friend_get_flags($flag, $content_id, $reset = NULL) {
     $flags = flag_get_flags($flag->content_type);
     $flagged_content[$uid][$content_type][$content_id] = array();
     // get flags with messages
-    $result = db_query("SELECT fc.*, ffm.message FROM {flag_content} fc LEFT JOIN {flag_friend_message} ffm ON ffm.fcid = fc.fcid WHERE content_type = '%s' AND content_id = %d", $content_type, $content_id);
+    $result = db_query("SELECT fc.*, ffm.message FROM {flag_content} fc LEFT JOIN {flag_friend_message} ffm ON ffm.fcid = fc.fcid WHERE fc.fid = %d AND fc.content_type = '%s' AND fc.content_id = %d", $flag->fid, $content_type, $content_id);
     while ($new_flag = db_fetch_object($result)) {
       $fcid = flag_friend_get_fcid($flag, $content_id, $new_flag->uid);
       $flagged_content[$uid][$content_type][$content_id][$fcid] = $new_flag;
@@ -203,60 +168,6 @@ function flag_friend_get_friends($uid, $reset = NULL) {
   }
 
   return $friends[$uid];
-}
-
-/**
- * Theme function for the list of pending flags.
- *
- * @param $account
- *   The user object of the page we're viewing.
- * @param $flags
- *   The list of flags of users who have flagged $account.
- */
-function theme_flag_friend_pending_flags($account, $flags) {
-  // $flag->user is the user requesting the relationship
-  $output = '';
-  $output .= t('<h3>You have !friend_request.</h3>', array('!friend_request' => format_plural(count($flags), 'a friend request', count($flags) .' friend requests')));
-  $output .= '<dl id="requests" class="accordion">';
-  $count = count($flags);
-  $output .= '<dt>'. $count .' Pending Friend'. format_plural($count, '', 's') .'</dt>';
-  $output .= '<dd><ul>';
-  foreach ($flags as $flag) {
-    $output .= '<li><div class="user-list"><div class="user clear-block">';
-    $output .= '<div class="picture-name"><div class="picture">'. theme('user_picture', $flag->user) .'</div>';
-    $output .= '<span class="breakwords">'. theme('username', $flag->user) .'</span></div>';
-    $output .= '<div class="info">'. $flag->message .'<br />'. flag_create_link('friend', $flag->user->uid) . flag_friend_create_link('unfriend', $flag->user->uid) .'</div>';
-    $output .= '</div></div></li>';
-  }
-  $output .= '</ul></dd></dl>';
-
-  return $output;
-}
-
-/**
- * Theme function for the list of friends for the given user.
- *
- * @param $account
- *   The user object of the user we're displaying friends for.
- * @param $friends
- *   The array of friends for this $account.
- */
-function theme_flag_friend_friend_list($account, $friends) {
-  global $user;
-  $output = '';
-  if (!empty($friends)) {
-    if ($user->uid == $account->uid) {
-      $title = 'My friends';
-    }
-    else {
-      $title = t("@name's friends", array('@name' => $account->name));
-    }
-    $output .= theme('user_list', $friends, $title);
-  }
-  else {
-    $output .= 'You have no friends, loser.';
-  }
-  return $output;
 }
 
 /**
@@ -638,12 +549,6 @@ function theme_flag_friend_unfriend_form($form) {
  */
 function flag_friend_theme() {
   return array(
-    'flag_friend_pending_flags' => array(
-      'arguments' => array('account', 'flags'),
-    ),
-    'flag_friend_friend_list' => array(
-      'arguments' => array('account', 'friends'),
-    ),
     'flag_friend_message_email' => array(
       'arguments' => array('status', 'flag', 'recipient', 'sender'),
     ),
