@@ -176,17 +176,19 @@ function flag_friend_get_friends($uid, $reset = NULL) {
 function flag_friend_user($op, &$edit, &$account, $category = NULL) {
   switch ($op) {
     case 'form':
-      // The user account edit form is about to be displayed. The module should present the form elements it wishes to inject into the form.
-      $form = array();
-      $form['friend_notification'] = array(
-        '#type' => 'select',
-        '#title' => t('I would like to be notified when someone wants to be friends with me'),
-        '#multiple' => FALSE,
-        '#options' => array(0 => 'Yes', -1 => 'No'),
-        '#default_value' => isset($account->friend_notification) ? $account->friend_notification : FLAG_FRIEND_NOTIFICATION,
-        '#weight' => -10,
-      );
-      return $form;
+      if ($category == 'account') {
+        // The user account edit form is about to be displayed. The module should present the form elements it wishes to inject into the form.
+        $form = array();
+        $form['friend_notification'] = array(
+          '#type' => 'select',
+          '#title' => t('I would like to be notified when someone wants to be friends with me'),
+          '#multiple' => FALSE,
+          '#options' => array(0 => 'Yes', -1 => 'No'),
+          '#default_value' => isset($account->friend_notification) ? $account->friend_notification : FLAG_FRIEND_NOTIFICATION,
+          '#weight' => -10,
+        );
+        return $form;
+      }
       break;
   }
 }
