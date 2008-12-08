@@ -12,7 +12,6 @@
  * Implementation of hook_views_default_views().
  */
 function flag_friend_views_default_views() {
-  $views = array();
   $view = new view;
   $view->name = 'friends';
   $view->description = 'Various page displays for flag_friend.';
@@ -188,6 +187,17 @@ function flag_friend_views_default_views() {
       ),
       'relationship' => 'none',
     ),
+    'message' => array(
+      'label' => 'Message',
+      'exclude' => 0,
+      'id' => 'message',
+      'table' => 'flag_friend_message',
+      'field' => 'message',
+      'relationship' => 'flag_friend_content_rel',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+    ),
     'ops' => array(
       'label' => 'Flag link',
       'link_type' => '',
@@ -299,6 +309,17 @@ function flag_friend_views_default_views() {
         'button' => 'Override',
       ),
       'relationship' => 'none',
+    ),
+    'message' => array(
+      'label' => 'Message',
+      'exclude' => 0,
+      'id' => 'message',
+      'table' => 'flag_friend_message',
+      'field' => 'message',
+      'relationship' => 'flag_content_rel',
+      'override' => array(
+        'button' => 'Use default',
+      ),
     ),
     'ops' => array(
       'label' => 'Flag link',
