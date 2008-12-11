@@ -86,14 +86,16 @@ function flag_friend_perm() {
  */
 function flag_friend_init() {
   global $user;
-  $flag = flag_get_flag('friend');
-  $flags = flag_friend_get_flags($flag, $user->uid);
+  if ($user->uid != 0) {
+    $flag = flag_get_flag('friend');
+    $flags = flag_friend_get_flags($flag, $user->uid);
 
-  // display a status message
-  $args[0] = array('user', 'flag');
-  $args[2] = array('friends', 'flag');
-  if ($count = count($flags) && (!in_array(arg(0), $args[0]) || !in_array(arg(2), $args[2]))) {
-    drupal_set_message(l(t('You have !count.', array('!count' => format_plural($count, '1 pending friend request', '@count pending friend requests'))), 'user/'. $user->uid .'/friends/pending'), 'notice');
+    // display a status message
+    $args[0] = array('user', 'flag');
+    $args[2] = array('friends', 'flag');
+    if ($count = count($flags) && (!in_array(arg(0), $args[0]) || !in_array(arg(2), $args[2]))) {
+      drupal_set_message(l(t('You have !count.', array('!count' => format_plural($count, '1 pending friend request', '@count pending friend requests'))), 'user/'. $user->uid .'/friends/pending'), 'notice');
+    }
   }
 }
 
