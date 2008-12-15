@@ -47,11 +47,6 @@ function flag_friend_preprocess_flag(&$vars) {
   if ($vars['flag']->name == 'friend') {
     global $user;
     
-    // Remove link if we're looking at our own so we cannot friend ourself
-    if ($vars['content_id'] == $user->uid) {
-      unset($vars['link_text']);
-    }
-    
     // Determine what the status in the friend process is.
     $status = flag_friend_determine_friend_status($vars['flag'], $user->uid, $vars['content_id']);
     switch ($status) {
@@ -190,6 +185,16 @@ function flag_friend_user($op, &$edit, &$account, $category = NULL) {
           '#weight' => -10,
         );
         return $form;
+      }
+      break;
+    case 'view':
+      global $user;
+      // Remove link if we're looking at our own so we cannot friend ourself
+      $flag = flag_get_flag('friend');
+      if ($user->uid == $account->uid) {
+        if ($account->content['flags'][$flag->name]) {
+          unset($account->content['flags'][$flag->name]);
+        }
       }
       break;
   }
