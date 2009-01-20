@@ -183,6 +183,10 @@ function flag_friend_user($op, &$edit, &$account, $category = NULL) {
         }
       }
       break;
+    case 'delete':
+      // remove any friend relationships if an account is removed
+      db_query("DELETE FROM {flag_friend} WHERE uid IN (%d) OR friend_uid IN (%d)", $account->uid);
+      break;
   }
 }
 
