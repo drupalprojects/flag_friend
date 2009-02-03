@@ -201,7 +201,7 @@ function flag_friend_user($op, &$edit, &$account, $category = NULL) {
 function flag_friend_create_link($type, $uid) {
   if ($type == 'unfriend') {
     $flag = flag_get_flag('friend');
-    $link = str_replace('Approve', 'Deny', $flag->theme('unflag', $uid));
+    $link = str_replace('Approve', 'Deny', str_replace('unflag', 'unfriend', $flag->theme('unflag', $uid)));
     return $link;
   }
 }
