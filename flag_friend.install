@@ -11,7 +11,7 @@
 function flag_friend_install() {
   // Create tables.
   drupal_install_schema('flag_friend');
-  drupal_set_message(st('The flag_friend module installed its tables successfully. Please a href="@enable">enable the friend flag</a>.', array('@enable' => url('admin/build/flags/edit/friend'))));
+  drupal_set_message(st('The flag_friend module installed its tables successfully. Please <a href="@enable">enable the friend flag</a>.', array('@enable' => url('admin/build/flags/edit/friend'))));
 }
 
 /**
