@@ -199,7 +199,7 @@ function flag_friend_views_default_views() {
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
-    'type' => 'normal',
+    'type' => 'tab',
     'title' => 'Friends',
     'weight' => '0',
   ));
@@ -299,9 +299,9 @@ function flag_friend_views_default_views() {
       'validate_argument_user_flag_test' => 'flaggable',
       'validate_argument_user_flag_id_type' => 'id',
       'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-                    return FALSE;
-                  }
-                  return TRUE;',
+                          return FALSE;
+                        }
+                        return TRUE;',
     ),
   ));
   $handler->override_option('title', 'Friend Requests');
