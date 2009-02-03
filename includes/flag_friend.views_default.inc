@@ -93,12 +93,17 @@ function flag_friend_views_default_views() {
     'order' => 'asc',
     'columns' => array(
       'picture' => 'picture',
+      'name' => 'picture',
       'message' => 'message',
       'ops' => 'ops',
       'uid' => 'ops',
     ),
     'info' => array(
       'picture' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'name' => array(
         'sortable' => 0,
         'separator' => '',
       ),
@@ -123,6 +128,18 @@ function flag_friend_views_default_views() {
       'id' => 'picture',
       'table' => 'users',
       'field' => 'picture',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'none',
+    ),
+    'name' => array(
+      'label' => 'Name',
+      'link_to_user' => 1,
+      'exclude' => 0,
+      'id' => 'name',
+      'table' => 'users',
+      'field' => 'name',
       'override' => array(
         'button' => 'Use default',
       ),
@@ -199,6 +216,18 @@ function flag_friend_views_default_views() {
       ),
       'relationship' => 'none',
     ),
+    'name' => array(
+      'label' => 'Name',
+      'link_to_user' => 1,
+      'exclude' => 0,
+      'id' => 'name',
+      'table' => 'users',
+      'field' => 'name',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'none',
+    ),
     'message' => array(
       'label' => 'Message',
       'exclude' => 0,
@@ -270,9 +299,9 @@ function flag_friend_views_default_views() {
       'validate_argument_user_flag_test' => 'flaggable',
       'validate_argument_user_flag_id_type' => 'id',
       'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-              return FALSE;
-            }
-            return TRUE;',
+                    return FALSE;
+                  }
+                  return TRUE;',
     ),
   ));
   $handler->override_option('title', 'Friend Requests');
@@ -315,6 +344,18 @@ function flag_friend_views_default_views() {
       'id' => 'picture',
       'table' => 'users',
       'field' => 'picture',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'none',
+    ),
+    'name' => array(
+      'label' => 'Name',
+      'link_to_user' => 1,
+      'exclude' => 0,
+      'id' => 'name',
+      'table' => 'users',
+      'field' => 'name',
       'override' => array(
         'button' => 'Use default',
       ),
