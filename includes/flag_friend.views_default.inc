@@ -123,7 +123,7 @@ function flag_friend_views_default_views() {
   $handler->override_option('relationships', array());
   $handler->override_option('fields', array(
     'picture' => array(
-      'label' => '',
+      'label' => 'Friend',
       'exclude' => 0,
       'id' => 'picture',
       'table' => 'users',
@@ -140,6 +140,17 @@ function flag_friend_views_default_views() {
       'id' => 'name',
       'table' => 'users',
       'field' => 'name',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'none',
+    ),
+    'uid' => array(
+      'label' => 'Actions',
+      'exclude' => 0,
+      'id' => 'uid',
+      'table' => 'flag_friend',
+      'field' => 'uid',
       'override' => array(
         'button' => 'Use default',
       ),
@@ -185,12 +196,6 @@ function flag_friend_views_default_views() {
     ),
   ));
   $handler->override_option('title', 'Friends');
-  $handler->override_option('style_plugin', 'grid');
-  $handler->override_option('style_options', array(
-    'grouping' => '',
-    'columns' => '6',
-    'alignment' => 'horizontal',
-  ));
   $handler->override_option('path', 'user/%/friends/all');
   $handler->override_option('menu', array(
     'type' => 'default tab',
@@ -299,9 +304,9 @@ function flag_friend_views_default_views() {
       'validate_argument_user_flag_test' => 'flaggable',
       'validate_argument_user_flag_id_type' => 'id',
       'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-                          return FALSE;
-                        }
-                        return TRUE;',
+                                return FALSE;
+                              }
+                              return TRUE;',
     ),
   ));
   $handler->override_option('title', 'Friend Requests');
