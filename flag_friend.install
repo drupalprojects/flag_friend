@@ -18,6 +18,10 @@ function flag_friend_install() {
  * Implementation of hook_uninstall().
  */
 function flag_friend_uninstall() {
+  // Remove default flag if it's enabled.
+  if ($flag = flag_get_flag('friend')) {
+    $flag->delete();
+  }
   // Remove tables.
   drupal_uninstall_schema('flag_friend');
   drupal_set_message(t('The flag_friend module was successfully uninstalled.'));
