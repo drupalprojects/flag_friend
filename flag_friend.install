@@ -43,6 +43,9 @@ function flag_friend_install() {
  *  Implementation of hook_uninstall().
  */
 function flag_friend_uninstall() {
+  if ($flag = flag_get_flag('friend')) {
+    $flag->delete();
+  }
   db_query("DROP TABLE {flag_friend}");
   db_query("DROP TABLE {flag_friend_message}");
   drupal_set_message(t('flag_friend module successfully uninstalled.'));
