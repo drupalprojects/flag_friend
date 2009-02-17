@@ -20,33 +20,23 @@ function flag_friend_install() {
         fcid smallint unsigned NOT NULL default '0',
         message text NOT NULL
       ) /*!40100 DEFAULT CHARACTER SET utf8 */;");     
+      break;
+    case 'pgsql':
+      db_query("CREATE TABLE {flag_friend} (
+        uid int_unsigned NOT NULL,
+        friend_uid int_unsigned NOT NULL,
+        created int default NULL,
+        PRIMARY KEY (uid, friend_uid)
+      );");
       
-      // create a new flag called friend
-      $options = array(
-        'show_on_page' => 1,
-        'show_on_teaser' => 1,
-        'show_on_form' => 1,
-        'flag_short' => 'Add friend',
-        'flag_long' => 'Add this user to your friends list',
-        'flag_message' => '',
-        'unflag_short' => 'Remove friend',
-        'unflag_long' => 'Remove this user from your friends list',
-        'unflag_message' => '',
-      );
-      db_query("INSERT INTO {flags} (fid, content_type, name, title, roles, global, options) VALUES (%d, 'user', 'friend', 'Friend', '5', 0, '%s')", db_next_id('{flags}_fid'), serialize($options));
-      $result = db_result(db_query("SELECT fid FROM {flags} WHERE name = '%s'", 'friend'));
-      
-      // enable the flag_form module for this flag
-      variable_set('flag_form_enable_'. $result, TRUE);
-      $success = TRUE;
+      db_query("CREATE TABLE {flag_friend_message} (
+        fcid smallint_unsigned NOT NULL default '0',
+        message text NOT NULL,
+        PRIMARY KEY (fcid)
+      );");
       break;
   }
-  if ($success) {
-    drupal_set_message(t('The flag_friend module installed its tables successfully.'));
-  }
-  else {
-    drupal_set_message(t('The installation of the flag_friend module got borked, yo.'), 'error');
-  }
+  drupal_set_message(t('The flag_friend module installed its tables successfully. Please <a href="@enable">enable the friend flag</a>.', array('@enable' => url('admin/build/flags/edit/friend'))));
 }
 
 /**
@@ -56,4 +46,13 @@ function flag_friend_uninstall() {
   db_query("DROP TABLE {flag_friend}");
   db_query("DROP TABLE {flag_friend_message}");
   drupal_set_message(t('flag_friend module successfully uninstalled.'));
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function flag_friend_update_5100() {
+  $ret = array();
+  $ret[] = update_sql('ALTER TABLE {flag_friend_message} ADD PRIMARY KEY (fcid)');
+  return $ret;
 }

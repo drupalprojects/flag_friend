@@ -313,7 +313,7 @@ function flag_friend_unfriend($event, $flag, $flag_name, $content_id, $token = N
 function flag_friend_determine_friend_status($flag, $uid1, $uid2) {
   $you_are_flagged = $flag->is_flagged($uid1, $uid2);
   $they_are_flagged = $flag->is_flagged($uid2, $uid1); 
-  $friends = db_result(db_query("SELECT * FROM {flag_friend} WHERE (uid = %d && friend_uid = %d) OR (uid = %d AND friend_uid = %d)", $uid1, $uid2, $uid2, $uid1));
+  $friends = db_result(db_query("SELECT * FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)", $uid1, $uid2, $uid2, $uid1));
   // see if these users have flagged eachother 
   if ($you_are_flagged && $they_are_flagged) {
     return 'both flagged';
@@ -538,3 +538,30 @@ function theme_flag_friend_unfriend_form($form) {
   //drupal_set_title();
   return drupal_render($form);
 }
+
+/**
+ * Implementation of hook_flag_default_flags().
+ */
+function flag_friend_flag_default_flags() {
+  $flags = array();
+  $flags[] = array(
+    'content_type' => 'user',
+    'name' => 'friend',
+    'title' => 'Friend',
+    'roles' => array(
+      0 => '2',
+    ),
+    'global' => FALSE,
+    'flag_short' => 'Add friend',
+    'flag_long' => 'Add this user to your list of friends.',
+    'flag_confirmation' => 'Are you sure you want to add this user to your list of friends?',
+    'unflag_short' => 'Remove friend',
+    'unflag_long' => 'Remove this user from your list of friends.',
+    'unflag_confirmation' => 'Are you sure you want to remove this user from your list of friends?',
+    'status' => FALSE,
+    'link_type' => 'confirm',
+    'locked' => array('name', 'global', 'link_type'),
+  );
+  return $flags;
+}
+
