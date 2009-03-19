@@ -199,9 +199,13 @@ function flag_friend_user($op, &$edit, &$account, $category = NULL) {
  *   The id of the user we're creating this to flag.
  */
 function flag_friend_create_link($type, $uid) {
+  $flag = flag_get_flag('friend');
   if ($type == 'unfriend') {
-    $flag = flag_get_flag('friend');
     $link = str_replace('Approve', 'Deny', str_replace('unflag', 'unfriend', $flag->theme('unflag', $uid)));
+    return $link;
+  }
+  else {
+    $link = str_replace('Approve', 'Deny', $flag->theme('unflag', $uid));
     return $link;
   }
 }
