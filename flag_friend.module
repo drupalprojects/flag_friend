@@ -610,3 +610,59 @@ function flag_friend_popups() {
     ),
   );
 }
+
+/**
+* Implementation of hook_preprocess_author_pane().
+*/
+function flag_friend_preprocess_author_pane(&$variables) {
+  global $user;
+  $account_id = $variables['account']->uid;
+  $image_path = $variables['image_path'];
+
+  // Accessing the user profile is the only way to be able to see the friend
+  // flag out-of-the-box so I feel it's pretty safe to use this permisssion.
+  if ($account_id != 0 && user_access('access user profiles') && $user->uid != $account_id) { 
+    $flag = flag_get_flag('friend');
+    $flag_status = flag_friend_determine_friend_status($flag, $user->uid, $account_id);
+
+    switch ($flag_status) {
+      case (FLAG_FRIEND_FLAGGED):
+        // Remove friend
+        $variables['flag_friend_link'] = flag_friend_create_link('unfriend', $account_id);
+        $variables['flag_friend'] =
+          l(theme('image', "$image_path/buddy-remove.png", t('Remove friend'), t('Remove friend'), NULL, FALSE),
+            "flag/confirm/unfriend/friend/$account_id",
+            array('query' => drupal_get_destination(),
+              'html' => TRUE,
+              'attributes'  => array('title' => $flag->unflag_short),
+            ));
+        break;
+
+      case (FLAG_FRIEND_APPROVAL):
+      case (FLAG_FRIEND_UNFLAGGED):
+        // Add friend
+        $variables['flag_friend_link'] = $flag->theme($flag->is_flagged($account_id) ? 'unflag' : 'flag', $account_id);
+        $variables['flag_friend'] =
+          l(theme('image', "$image_path/buddy-add.png", t('Add friend'), t('Add friend'), NULL, FALSE),
+            "flag/confirm/flag/friend/$account_id",
+            array('query' => drupal_get_destination(),
+              'html' => TRUE,
+              'attributes'  => array('title' => $flag->flag_short),
+            ));
+        break;
+    
+      case (FLAG_FRIEND_PENDING):
+        // Pending friend
+        $variables['flag_friend_link'] = $flag->theme($flag->is_flagged($account_id) ? 'unflag' : 'flag', $account_id);
+        $variables['flag_friend'] =
+        l(theme('image', "$image_path/buddy-remove.png", t(' Friend Requested. Cancel?'), t(' Friend Requested. Cancel?'), NULL, FALSE),
+          "flag/confirm/unflag/friend/$account_id",
+          array('query' => drupal_get_destination(),
+            'html' => TRUE,
+            'attributes'  => array('title' => t(' Friend Requested. Cancel?')),
+          ));
+           
+        break;
+    }
+  }
+}
