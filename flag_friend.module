@@ -166,7 +166,7 @@ function flag_friend_user($op, &$edit, &$account, $category = NULL) {
           '#title' => t('Friend notification'),
           '#description' => t('Would you like to be notified when someone wants to be friends with you?'),
           '#multiple' => FALSE,
-          '#options' => array(0 => 'Yes', -1 => 'No'),
+          '#options' => array(0 => t('Yes'), -1 => t('No')),
           '#default_value' => isset($account->friend_notification) ? $account->friend_notification : FLAG_FRIEND_NOTIFICATION,
           '#weight' => -10,
         );
@@ -201,11 +201,11 @@ function flag_friend_user($op, &$edit, &$account, $category = NULL) {
 function flag_friend_create_link($type, $uid) {
   $flag = flag_get_flag('friend');
   if ($type == 'unfriend') {
-    $link = str_replace('Approve', 'Deny', str_replace('unflag', 'unfriend', $flag->theme('unflag', $uid)));
+    $link = str_replace(t('Approve'), t('Deny'), str_replace('unflag', 'unfriend', $flag->theme('unflag', $uid)));
     return $link;
   }
   else {
-    $link = str_replace('Approve', 'Deny', $flag->theme('unflag', $uid));
+    $link = str_replace(t('Approve'), t('Deny'), $flag->theme('unflag', $uid));
     return $link;
   }
 }
@@ -308,7 +308,7 @@ function flag_friend_message_form($action, $flag, $content_id, $token) {
   $form['flag_friend_submit'] = array(
     '#type' => 'submit',
     '#value' => t('Send'),
-    '#suffix' => l('Cancel', $_GET['destination']),
+    '#suffix' => l(t('Cancel'), $_GET['destination']),
   );
   $form['#theme'] = 'flag_friend_message_form';
   return $form;
