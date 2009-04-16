@@ -54,7 +54,7 @@ function flag_friend_schema() {
   $schema['flag_friend_message'] = array(
     'fields' => array(
       'fcid' => array(
-        'type' => 'int', 
+        'type' => 'serial', 
         'unsigned' => TRUE, 
         'size' => 'small', 
         'not null' => TRUE, 
