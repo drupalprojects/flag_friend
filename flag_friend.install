@@ -70,3 +70,21 @@ function flag_friend_schema() {
   );
   return $schema;
 }
+
+/**
+ * Update to change the flag_friend_message:fcid from int to serial.
+ */
+function flag_friend_update_6000() {
+  $ret = array();
+  
+  $new_field = array(
+    'type' => 'serial',
+  );
+
+  // Drop and re-add this field because there is a bug in
+  // db_change_field that causes this to fail when trying to cast the data.
+  db_drop_field($ret, 'flag_friend_message', 'fcid');
+  db_add_field($ret, 'flag_friend_message', 'fcid', $new_field);
+  
+  return $ret;
+}
