@@ -54,12 +54,8 @@ function flag_friend_schema() {
   $schema['flag_friend_message'] = array(
     'fields' => array(
       'fcid' => array(
-        'type' => 'serial', 
-        'unsigned' => TRUE, 
-        'size' => 'small', 
-        'not null' => TRUE, 
-        'default' => 0, 
-        'disp-width' => '5'
+        'type' => 'serial',
+        'not null' => TRUE,
       ),
       'message' => array(
         'type' => 'text', 
@@ -80,11 +76,13 @@ function flag_friend_update_6000() {
   $new_field = array(
     'type' => 'serial',
   );
+  $key = array(
+    'primary_key' => array('fcid'),
+  );
 
-  // Drop and re-add this field because there is a bug in
-  // db_change_field that causes this to fail when trying to cast the data.
+  db_drop_primary_key($ret, 'flag_friend_message');
   db_drop_field($ret, 'flag_friend_message', 'fcid');
-  db_add_field($ret, 'flag_friend_message', 'fcid', $new_field);
+  db_change_field($ret, 'flag_friend_message', 'fcid', 'fcid', $new_field, $key);
   
   return $ret;
 }
