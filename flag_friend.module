@@ -634,8 +634,29 @@ function flag_friend_popups() {
 }
 
 /**
-* Implementation of hook_preprocess_author_pane().
-*/
+ * Implementation of hook_activity_grants().
+ */
+function flag_friend_activity_grants($activity, $object, $type) {
+  return array(
+    $activity->uid, // the module_id that will be used
+  );
+}
+
+/**
+ * Implementation of hook_activity_access_grants().
+ */
+function flag_friend_activity_access_grants($account) {
+  $friends = flag_friend_get_friends($account->uid);
+  $realm_ids = array();
+  if (!empty($friends)) {
+    $realm_ids = array_keys($friends);
+  }
+  return $realm_ids;
+}
+
+/**
+ * Implementation of hook_preprocess_author_pane().
+ */
 function flag_friend_preprocess_author_pane(&$variables) {
   global $user;
   $account_id = $variables['account']->uid;
