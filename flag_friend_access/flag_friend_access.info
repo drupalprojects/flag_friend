@@ -1,0 +1,5 @@
+name = Flag friend access control
+description = Allows users to specify that only their friends can view this piece of content
+package = Flags
+dependencies[] = flag_friend
+core = 6.x
