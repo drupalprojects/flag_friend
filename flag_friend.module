@@ -22,6 +22,7 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
 
       // See the status of the friendship.
       $status = flag_friend_determine_friend_status($flag, $account->uid, $content_id, TRUE);
+      $friend_account = user_load(array('uid' => $content_id));
 
       // If both are now flagged, we record the relationship and remove the flags.
       if ($status === FLAG_FRIEND_BOTH) {
@@ -34,7 +35,14 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
 
         // Then remove the flags.
         $flag->flag('unflag', $content_id, $account);
-        $flag->flag('unflag', $account->uid, user_load(array('uid' => $content_id)));
+        $flag->flag('unflag', $account->uid, $friend_account);
+
+        // fire trigger
+        module_invoke_all('flag_friend', 'approve', $friend_account);
+      }
+      else {
+        // fire trigger
+        module_invoke_all('flag_friend', 'request', $friend_account);
       }
     }
   }
@@ -417,6 +425,9 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
       $account = user_load(array('uid' => $content_id));
       // and the $user->uid is actually the content(_id) we're unflagging
       $content_id = $user->uid;
+
+      // Fire trigger
+      module_invoke_all('flag_friend', 'deny', $user);
     }
     // remove any messages
     flag_friend_message($event, $flag, $content_id, $account->uid);
@@ -426,6 +437,9 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
   elseif ($event == 'unfriend') {
     // remove the friend relationship    
     db_query('DELETE FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)', $user->uid, $content_id, $content_id, $user->uid);
+
+    // Fire trigger
+    module_invoke_all('flag_friend', 'remove', $user);
   }
 }
 
@@ -634,6 +648,57 @@ function flag_friend_popups() {
 }
 
 /**
+ * Implementation of hook_hook_info().
+ *
+ * Provide some triggers so that actions can be performed at various stages.
+ */
+function flag_friend_hook_info() {
+  return array(
+    'flag_friend' => array(
+      'flag_friend' => array(
+        'approve' => array(
+          'runs when' => t("A user approves another's friendship request."),
+        ),
+        'request' => array(
+          'runs when' => t("A user requested another's friendship."),
+        ),
+        'deny' => array(
+          'runs when' => t("A user denies another's friendship request."),
+        ),
+        'remove' => array(
+          'runs when' => t("A user removes another user as a friend."),
+        )
+      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_trigger_name().
+ */
+function flag_friend_flag_friend($op, $user) {
+  $aids = _trigger_get_hook_aids('flag_friend', $op);
+  $context = array(
+    'hook' => 'flag_friend',
+    'op' => $op,
+    'user' => $user,
+  );
+  actions_do(array_keys($aids), $user, $context);
+}
+
+/**
+ * Implementation of hook_activity_info().
+ */
+function flag_friend_activity_info() {
+  $info = new stdClass();
+  $info->name = 'flag_friend';
+  $info->object_type = 'user';
+  $info->hooks = array('flag_friend' => array('approve', 'request', 'deny', 'remove'));
+  $module_info[$info->name] = $info;
+  return $module_info;
+}
+
+/**
  * Implementation of hook_activity_grants().
  */
 function flag_friend_activity_grants($activity, $object, $type) {
@@ -655,6 +720,34 @@ function flag_friend_activity_access_grants($account) {
 }
 
 /**
+ * Token integration.
+ */
+
+/**
+ * Implementation of hook_token_list().
+ */
+function flag_friend_token_list($type = 'all') {
+  if ($type == 'flag_friend') {
+    $tokens = array();
+    $tokens['flag_friend'] = array(
+      'friend-name' => t('The name of the user being acted upon.'),
+    );
+    return $tokens;
+  }
+}
+
+/**
+ * Implementation of hook_token_values().
+ */
+function flag_friend_token_values($type, $object = NULL, $options = array()) {
+  if (($type == 'flag_friend' || $type == 'all') && !empty($object)) {
+    $data = array();
+    $data['friend-name'] = $object->name;
+    return $data;
+  }
+}
+
+/**
  * Implementation of hook_preprocess_author_pane().
  */
 function flag_friend_preprocess_author_pane(&$variables) {
@@ -664,7 +757,7 @@ function flag_friend_preprocess_author_pane(&$variables) {
 
   // Accessing the user profile is the only way to be able to see the friend
   // flag out-of-the-box so I feel it's pretty safe to use this permisssion.
-  if ($account_id != 0 && user_access('access user profiles') && $user->uid != $account_id) { 
+  if ($account_id != 0 && user_access('access user profiles') && $user->uid != $account_id) {
     $flag = flag_get_flag('friend');
     $flag_status = flag_friend_determine_friend_status($flag, $user->uid, $account_id);
 
@@ -693,7 +786,7 @@ function flag_friend_preprocess_author_pane(&$variables) {
               'attributes'  => array('title' => $flag->flag_short),
             ));
         break;
-    
+
       case (FLAG_FRIEND_PENDING):
         // Pending friend
         $variables['flag_friend_link'] = $flag->theme($flag->is_flagged($account_id) ? 'unflag' : 'flag', $account_id);
@@ -704,7 +797,7 @@ function flag_friend_preprocess_author_pane(&$variables) {
             'html' => TRUE,
             'attributes'  => array('title' => t(' Friend Requested. Cancel?')),
           ));
-           
+
         break;
     }
   }
