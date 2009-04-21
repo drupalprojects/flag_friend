@@ -71,18 +71,8 @@ function flag_friend_schema() {
  * Update to change the flag_friend_message:fcid from int to serial.
  */
 function flag_friend_update_6000() {
-  $ret = array();
-  
-  $new_field = array(
-    'type' => 'serial',
-  );
-  $key = array(
-    'primary_key' => array('fcid'),
-  );
-
+  $ret = array();  
   db_drop_primary_key($ret, 'flag_friend_message');
-  db_drop_field($ret, 'flag_friend_message', 'fcid');
-  db_change_field($ret, 'flag_friend_message', 'fcid', 'fcid', $new_field, $key);
-  
+  db_change_field($ret, 'flag_friend_message', 'fcid', 'fcid', array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE), array('primary key' => array('fcid')));
   return $ret;
 }
