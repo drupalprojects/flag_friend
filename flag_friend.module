@@ -731,6 +731,7 @@ function flag_friend_token_list($type = 'all') {
     $tokens = array();
     $tokens['flag_friend'] = array(
       'friend-name' => t('The name of the user being acted upon.'),
+      'friend-name-link' => t('The name of the user being acted upon as a link.')
     );
     return $tokens;
   }
@@ -743,6 +744,7 @@ function flag_friend_token_values($type, $object = NULL, $options = array()) {
   if (($type == 'flag_friend' || $type == 'all') && !empty($object)) {
     $data = array();
     $data['friend-name'] = $object->name;
+    $data['friend-name-link'] = l($object->name, 'user/'. $object->uid);
     return $data;
   }
 }
