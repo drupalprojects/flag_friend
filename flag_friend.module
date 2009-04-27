@@ -677,13 +677,17 @@ function flag_friend_hook_info() {
  * Implementation of hook_trigger_name().
  */
 function flag_friend_flag_friend($op, $user) {
-  $aids = _trigger_get_hook_aids('flag_friend', $op);
+  if (function_exists('_trigger_get_hook_aids')) {
+    $aids = _trigger_get_hook_aids('flag_friend', $op);
+  }  
   $context = array(
     'hook' => 'flag_friend',
     'op' => $op,
     'user' => $user,
   );
-  actions_do(array_keys($aids), $user, $context);
+  if ($aids) {
+    actions_do(array_keys($aids), $user, $context);
+  }
 }
 
 /**
