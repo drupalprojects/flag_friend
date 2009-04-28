@@ -707,7 +707,7 @@ function flag_friend_activity_info() {
  */
 function flag_friend_activity_grants($activity, $object, $type) {
   return array(
-    $activity->uid, // the module_id that will be used
+    'flag_friend' => $activity->uid, // the module_id that will be used
   );
 }
 
@@ -718,7 +718,9 @@ function flag_friend_activity_access_grants($account) {
   $friends = flag_friend_get_friends($account->uid);
   $realm_ids = array();
   if (!empty($friends)) {
-    $realm_ids = array_keys($friends);
+    foreach ($friends as $friend) {
+      $realm_ids['flag_friend'][] = $friend;
+    }
   }
   return $realm_ids;
 }
