@@ -38,11 +38,11 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
         $flag->flag('unflag', $account->uid, $friend_account);
 
         // fire trigger
-        module_invoke_all('flag_friend', 'approve', $friend_account);
+        module_invoke_all('flag_friend', 'approve', $friend_account, $account);
       }
       else {
         // fire trigger
-        module_invoke_all('flag_friend', 'request', $friend_account);
+        module_invoke_all('flag_friend', 'request', $friend_account, $account);
       }
     }
   }
@@ -427,7 +427,7 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
       $content_id = $user->uid;
 
       // Fire trigger
-      module_invoke_all('flag_friend', 'deny', $user);
+      module_invoke_all('flag_friend', 'deny', $user, $account);
     }
     // remove any messages
     flag_friend_message($event, $flag, $content_id, $account->uid);
@@ -439,7 +439,7 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
     db_query('DELETE FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)', $user->uid, $content_id, $content_id, $user->uid);
 
     // Fire trigger
-    module_invoke_all('flag_friend', 'remove', $user);
+    module_invoke_all('flag_friend', 'remove', $account, $user);
   }
 }
 
@@ -667,7 +667,7 @@ function flag_friend_hook_info() {
         ),
         'remove' => array(
           'runs when' => t("A user removes another user as a friend."),
-        )
+        ),
       ),
     ),
   );
@@ -676,17 +676,36 @@ function flag_friend_hook_info() {
 /**
  * Implementation of hook_trigger_name().
  */
-function flag_friend_flag_friend($op, $user) {
+function flag_friend_flag_friend($op, $friend, $user) {
   if (function_exists('_trigger_get_hook_aids')) {
     $aids = _trigger_get_hook_aids('flag_friend', $op);
-  }  
-  $context = array(
-    'hook' => 'flag_friend',
-    'op' => $op,
-    'user' => $user,
-  );
+  }
+  switch ($op) {
+    // in these cases, the users performing the operations are flipped
+    case 'approve':
+    case 'deny':
+      $user->friend = $friend;
+      $context = array(
+        'hook' => 'flag_friend',
+        'op' => $op,
+        'user' => $friend,
+        'flag_friend' => $user,
+      );
+      break;
+    // these are normal
+    case 'request':
+    case 'remove':
+      $friend->friend = $user;
+      $context = array(
+        'hook' => 'flag_friend',
+        'op' => $op,
+        'user' => $user,
+        'flag_friend' => $friend,
+      );
+      break;
+  }
   if ($aids) {
-    actions_do(array_keys($aids), $user, $context);
+    actions_do(array_keys($aids), $friend, $context);
   }
 }
 
@@ -696,7 +715,8 @@ function flag_friend_flag_friend($op, $user) {
 function flag_friend_activity_info() {
   $info = new stdClass();
   $info->name = 'flag_friend';
-  $info->object_type = 'user';
+  $info->object_type = 'flag_friend';
+  $info->objects = array('user', 'flag_friend');
   $info->hooks = array('flag_friend' => array('approve', 'request', 'deny', 'remove'));
   $module_info[$info->name] = $info;
   return $module_info;
@@ -707,7 +727,7 @@ function flag_friend_activity_info() {
  */
 function flag_friend_activity_grants($activity, $object, $type) {
   return array(
-    'flag_friend' => $activity->uid, // the module_id that will be used
+    'flag_friend' => array($activity->uid), // the module_id that will be used
   );
 }
 
@@ -736,8 +756,8 @@ function flag_friend_token_list($type = 'all') {
   if ($type == 'flag_friend') {
     $tokens = array();
     $tokens['flag_friend'] = array(
-      'friend-name' => t('The name of the user being acted upon.'),
-      'friend-name-link' => t('The name of the user being acted upon as a link.')
+      'requestor' => t('The name of the user who originally made the request.'),
+      'requestee' => t('The name of the user who originally received the request.')
     );
     return $tokens;
   }
@@ -747,10 +767,10 @@ function flag_friend_token_list($type = 'all') {
  * Implementation of hook_token_values().
  */
 function flag_friend_token_values($type, $object = NULL, $options = array()) {
-  if (($type == 'flag_friend' || $type == 'all') && !empty($object)) {
+  if (($type == 'flag_friend') && !empty($object)) {
     $data = array();
-    $data['friend-name'] = $object->name;
-    $data['friend-name-link'] = l($object->name, 'user/'. $object->uid);
+    $data['requestor'] = $object->friend->name;
+    $data['requestee'] = $object->name;
     return $data;
   }
 }
