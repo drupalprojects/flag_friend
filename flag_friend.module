@@ -723,11 +723,23 @@ function flag_friend_activity_info() {
 }
 
 /**
+ * Implementation of hook_activity_access_api().
+ */
+function flag_friend_activity_access_api() {
+  $flag = flag_get_flag('friend');
+  return array(
+    'realms' => array(
+      'flag_friend' => t($flag->title),
+    ),
+  );
+}
+
+/**
  * Implementation of hook_activity_grants().
  */
 function flag_friend_activity_grants($activity, $object, $type) {
   return array(
-    'flag_friend' => array($activity->uid), // the module_id that will be used
+    'flag_friend' => array($activity->uid), // the id that will be used
   );
 }
 
@@ -738,9 +750,7 @@ function flag_friend_activity_access_grants($account) {
   $friends = flag_friend_get_friends($account->uid);
   $realm_ids = array();
   if (!empty($friends)) {
-    foreach ($friends as $friend) {
-      $realm_ids['flag_friend'][] = $friend;
-    }
+    $realm_ids['flag_friend'] = array_keys($friends);
   }
   return $realm_ids;
 }
