@@ -714,6 +714,7 @@ function flag_friend_flag_friend($op, $friend, $user) {
  */
 function flag_friend_activity_info() {
   $info = new stdClass();
+  $info->api = 2;
   $info->name = 'flag_friend';
   $info->object_type = 'flag_friend';
   $info->objects = array('requestor' => 'user', 'requestee' => 'flag_friend'); // array keys are the labels
