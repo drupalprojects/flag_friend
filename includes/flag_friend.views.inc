@@ -19,6 +19,9 @@ function flag_friend_views_handlers() {
       'flag_friend_handler_argument_numeric' => array(
         'parent' => 'views_handler_argument_numeric',
       ),
+      'flag_friend_handler_argument_apachesolr_friend' => array(
+        'parent' => 'views_handler_argument_numeric',
+      ),
       'flag_friend_handler_field_links' => array(
         'parent' => 'views_handler_field',
       ),
@@ -117,4 +120,19 @@ function flag_friend_views_data() {
   );
   
   return $data;
+}
+
+/**
+ * Implementation of hook_views_data_alter().
+ */
+function flag_friend_views_data_alter(&$data) {
+  if (module_exists('apachesolr_views')) {
+    $data['apachesolr']['friends'] = array(
+      'title' => t('Friends of'),
+      'help' => t('Retrieve the friends of the user id given.'),
+      'argument' => array(
+        'handler' => 'flag_friend_handler_argument_apachesolr_friend',
+      ),
+    );
+  }
 }
