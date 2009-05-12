@@ -719,8 +719,7 @@ function flag_friend_activity_info() {
   $info->object_type = 'flag_friend';
   $info->objects = array('requestor' => 'user', 'requestee' => 'flag_friend'); // array keys are the labels
   $info->hooks = array('flag_friend' => array('approve', 'request', 'deny', 'remove'));
-  $module_info[$info->name] = $info;
-  return $module_info;
+  return $info;
 }
 
 /**
