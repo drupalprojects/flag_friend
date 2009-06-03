@@ -20,7 +20,7 @@ function flag_friend_views_handlers() {
         'parent' => 'views_handler_argument_numeric',
       ),
       'flag_friend_handler_argument_apachesolr_friend' => array(
-        'parent' => 'views_handler_argument_numeric',
+        'parent' => 'apachesolr_views_handler_argument',
       ),
       'flag_friend_handler_field_links' => array(
         'parent' => 'views_handler_field',
@@ -132,6 +132,7 @@ function flag_friend_views_data_alter(&$data) {
       'help' => t('Retrieve the friends of the user id given.'),
       'argument' => array(
         'handler' => 'flag_friend_handler_argument_apachesolr_friend',
+        'field' => 'uid',
       ),
     );
   }

@@ -54,20 +54,7 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
 function flag_friend_init() {
   // add a little notice to our popups
   if (module_exists('popups')) {
-    drupal_add_js("
-      Drupal.flagFriendPopupsAfterSubmit = function(data, options, element) {
-        var \$element = $(element);
-        var msg = '';
-        if (\$element.hasClass('unflag-action')) {
-          msg = 'Friend request canceled.';
-        }
-        if (\$element.hasClass('flag-action')) {
-          msg = 'Friend requested.';
-        }
-        Popups.message('Flag friend', msg);
-        location.reload();
-        return false;
-      };", 'inline');
+    drupal_add_js(drupal_get_path('module', 'flag_friend') .'/flag_friend.popups.js');
   }
 }
 
@@ -438,6 +425,9 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
     // remove the friend relationship    
     db_query('DELETE FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)', $user->uid, $content_id, $content_id, $user->uid);
 
+    // Denial - the content_id is actually the account param in this case
+    $account = user_load(array('uid' => $content_id));
+    
     // Fire trigger
     module_invoke_all('flag_friend', 'remove', $account, $user);
   }
