@@ -255,25 +255,27 @@ function flag_friend_determine_friend_status($flag, $uid1, $uid2, $reset = NULL)
     $key2 = $uid1;
   }
 
-  if (!isset($status_cache[$key1][$key2])) {
-    $you_are_flagged = $flag->is_flagged($uid1, $uid2);
-    $they_are_flagged = $flag->is_flagged($uid2, $uid1);
-    $friends = db_result(db_query("SELECT * FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)", $uid1, $uid2, $uid2, $uid1));
-    // see if these users have flagged eachother
-    if ($you_are_flagged && $they_are_flagged) {
-      $status_cache[$key1][$key2] = FLAG_FRIEND_BOTH;
-    }
-    elseif ($friends) {
-      $status_cache[$key1][$key2] = FLAG_FRIEND_FLAGGED;
-    }
-    elseif (!$you_are_flagged && !$they_are_flagged) {
-      $status_cache[$key1][$key2] = FLAG_FRIEND_UNFLAGGED;
-    }
-    elseif ($you_are_flagged && !$they_are_flagged) {
-      $status_cache[$key1][$key2] = FLAG_FRIEND_APPROVAL;
-    }
-    elseif (!$you_are_flagged && $they_are_flagged) {
-      $status_cache[$key1][$key2] = FLAG_FRIEND_PENDING;
+  if (isset($flag)) {
+    if (!isset($status_cache[$key1][$key2])) {
+      $you_are_flagged = $flag->is_flagged($uid1, $uid2);
+      $they_are_flagged = $flag->is_flagged($uid2, $uid1);
+      $friends = db_result(db_query("SELECT * FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)", $uid1, $uid2, $uid2, $uid1));
+      // see if these users have flagged eachother
+      if ($you_are_flagged && $they_are_flagged) {
+        $status_cache[$key1][$key2] = FLAG_FRIEND_BOTH;
+      }
+      elseif ($friends) {
+        $status_cache[$key1][$key2] = FLAG_FRIEND_FLAGGED;
+      }
+      elseif (!$you_are_flagged && !$they_are_flagged) {
+        $status_cache[$key1][$key2] = FLAG_FRIEND_UNFLAGGED;
+      }
+      elseif ($you_are_flagged && !$they_are_flagged) {
+        $status_cache[$key1][$key2] = FLAG_FRIEND_APPROVAL;
+      }
+      elseif (!$you_are_flagged && $they_are_flagged) {
+        $status_cache[$key1][$key2] = FLAG_FRIEND_PENDING;
+      }
     }
   }
   return $status_cache[$key1][$key2];
