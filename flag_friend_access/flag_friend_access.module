@@ -13,7 +13,7 @@ function flag_friend_access_node_grants($account, $op) {
   // module only controls view operations
   if ($op == 'view') {
     $friends = flag_friend_get_friends($account->uid);
-    $grants = array();
+    $grants['flag_friend'][] = $account->uid;
     if (!empty($friends)) {
       $grants['flag_friend'] = array_keys($friends);
     }
