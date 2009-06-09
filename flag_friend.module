@@ -507,9 +507,9 @@ function theme_flag_friend_message_email($status, $flag, $recipient, $sender) {
   switch ($status) {
     case FLAG_FRIEND_FLAGGED:
       // sender confirmed you as a friend
-      $email['subject'] = t('!username confirmed you as a friend !site', array(
+      $email['subject'] = t('!username confirmed you as a friend on !site', array(
         '!username' => $sender->name,
-        '!site' => 'on '. variable_get('site_name', ''),
+        '!site' => variable_get('site_name', ''),
         ));
       $email['body'] = t('!firstname confirmed you as a friend on !site.
 
@@ -523,15 +523,14 @@ function theme_flag_friend_message_email($status, $flag, $recipient, $sender) {
       The !site Team', array(
         '!firstname' => $sender->firstname ? $sender->firstname : $sender->name,
         '!site' => variable_get('site_name', ''),
-        '!message' => $flag->friend_message ? 'Message:
-        '. $flag->friend_message : '',
+        '!message' => $flag->friend_message ? t('Message:'). $flag->friend_message : '',
         '!link' => url('user/'. $sender->uid, array('absolute' => TRUE)),
         ));
       break;
 
     case FLAG_FRIEND_PENDING:
       // sender added you as a friend
-      $email['subject'] = t('!username added you as a friend !site', array('!username' => $sender->name, '!site' => 'on '. variable_get('site_name', '')));
+      $email['subject'] = t('!username added you as a friend !site', array('!username' => $sender->name, '!site' => variable_get('site_name', '')));
       $email['body'] = t('!firstname added you as a friend on !site. We need to confirm that you know !firstname in order for you to be friends on !site.
 
       To confirm this friend request, follow the link below:
@@ -543,8 +542,7 @@ function theme_flag_friend_message_email($status, $flag, $recipient, $sender) {
       The !site Team', array(
         '!firstname' => $sender->firstname ? $sender->firstname : $sender->name,
         '!site' => variable_get('site_name', ''),
-        '!message' => $flag->friend_message ? 'Message:
-        '. $flag->friend_message : '',
+        '!message' => $flag->friend_message ? t('Message:'). $flag->friend_message : '',
         '!link' => url('user/'. $recipient->uid .'/friends', array('absolute' => TRUE)),
         ));
       break;
