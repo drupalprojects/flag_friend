@@ -375,14 +375,10 @@ function flag_friend_form_submit($form, &$form_state) {
   $token = $form_state['values']['current'][3];
   $status = flag_friend_determine_friend_status($flag, $user->uid, $content_id, TRUE);
   
-  if (!empty($form_state['values']['flag_friend_message'])) {
+  if (isset($form_state['values']['flag_friend_message'])) {
     $flag->friend_message = $form_state['values']['flag_friend_message'];
-    // check the status before trying to record.
-    // we do this because the flag is removed in hook_flag if this status is
-    // true there, which results in an error when trying to save the message
-    // because we have no fcid with which to save. so just email it and do not
-    // record.
-    if ($status !== FLAG_FRIEND_BOTH) {
+    // Record message only if user pending request.
+    if ($status === FLAG_FRIEND_PENDING) {
       flag_friend_message($action, $flag, $content_id, $user->uid);
     }
     flag_friend_message_email($status, $flag, $content_id, $user);
