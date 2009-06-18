@@ -708,25 +708,15 @@ function flag_friend_flag_friend($op, $friend, $user) {
  * Implementation of hook_activity_info().
  */
 function flag_friend_activity_info() {
+  $flag = flag_get_flag('friend');
   $info = new stdClass();
   $info->api = 2;
   $info->name = 'flag_friend';
   $info->object_type = 'flag_friend';
   $info->objects = array('requestor' => 'user', 'requestee' => 'flag_friend'); // array keys are the labels
   $info->hooks = array('flag_friend' => array('approve', 'request', 'deny', 'remove'));
+  $info->realms = array('flag_friend' => $flag->title);
   return $info;
-}
-
-/**
- * Implementation of hook_activity_access_api().
- */
-function flag_friend_activity_access_api() {
-  $flag = flag_get_flag('friend');
-  return array(
-    'realms' => array(
-      'flag_friend' => t($flag->title),
-    ),
-  );
 }
 
 /**
