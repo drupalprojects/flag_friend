@@ -289,7 +289,7 @@ function flag_friend_form_flag_confirm_alter(&$form, &$form_state) {
     $action = $form['action']['#value'];
     $flag = flag_get_flag('friend');
     $content_id = $form['content_id']['#value'];
-    $token = $_REQUEST['token'];
+    $token = isset($_REQUEST['token']) ? $_REQUEST['token'] : '';
 
     switch ($action) {
       case 'flag':
@@ -337,6 +337,7 @@ function flag_friend_message_form($action, $flag, $content_id, $token) {
  * Form to confirm an unfriend flagging.
  */
 function flag_friend_unfriend_form($action, $flag, $content_id, $token) {
+  global $user;
   $form['current'] = array('#type' => 'value', '#value' => func_get_args());
 
   $status = flag_friend_determine_friend_status($flag, $user->uid, $content_id);
@@ -374,7 +375,7 @@ function flag_friend_form_submit($form, &$form_state) {
   $token = $form_state['values']['current'][3];
   $status = flag_friend_determine_friend_status($flag, $user->uid, $content_id, TRUE);
   
-  if ($form_state['values']['flag_friend_message']) {
+  if (!empty($form_state['values']['flag_friend_message'])) {
     $flag->friend_message = $form_state['values']['flag_friend_message'];
     // check the status before trying to record.
     // we do this because the flag is removed in hook_flag if this status is
@@ -389,6 +390,10 @@ function flag_friend_form_submit($form, &$form_state) {
   // the only time we want to unfriend, is if $status = FLAGGED or APPROVAL
   elseif ($status === FLAG_FRIEND_FLAGGED || $status === FLAG_FRIEND_APPROVAL) {
     flag_friend_unfriend($action, $flag, $content_id, $user, $status);
+  }
+  elseif ($status === FLAG_FRIEND_PENDING) {
+    // Clean message when user cancel own request.
+    flag_friend_message($action, $flag, $content_id, $user->uid);
   }
 }
 
@@ -521,7 +526,7 @@ function theme_flag_friend_message_email($status, $flag, $recipient, $sender) {
       Thanks,
 
       The !site Team', array(
-        '!firstname' => $sender->firstname ? $sender->firstname : $sender->name,
+        '!firstname' => isset($sender->firstname) ? $sender->firstname : $sender->name,
         '!site' => variable_get('site_name', ''),
         '!message' => $flag->friend_message ? t('Message:'). $flag->friend_message : '',
         '!link' => url('user/'. $sender->uid, array('absolute' => TRUE)),
@@ -540,7 +545,7 @@ function theme_flag_friend_message_email($status, $flag, $recipient, $sender) {
 
       Thanks,
       The !site Team', array(
-        '!firstname' => $sender->firstname ? $sender->firstname : $sender->name,
+        '!firstname' => isset($sender->firstname) ? $sender->firstname : $sender->name,
         '!site' => variable_get('site_name', ''),
         '!message' => $flag->friend_message ? t('Message:'). $flag->friend_message : '',
         '!link' => url('user/'. $recipient->uid .'/friends', array('absolute' => TRUE)),
