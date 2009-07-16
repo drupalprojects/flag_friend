@@ -78,9 +78,28 @@ function flag_friend_views_default_views() {
       'field' => 'friend_uid',
     ),
   ));
+  $handler->override_option('filters', array(
+    'status' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'status',
+      'table' => 'users',
+      'field' => 'status',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('access', array(
     'type' => 'perm',
     'perm' => 'access content',
+  ));
+  $handler->override_option('cache', array(
+    'type' => 'none',
   ));
   $handler->override_option('empty', 'No Friends have been added.');
   $handler->override_option('empty_format', '1');
@@ -200,12 +219,14 @@ function flag_friend_views_default_views() {
   $handler->override_option('menu', array(
     'type' => 'default tab',
     'title' => 'View All Friends',
+    'description' => '',
     'weight' => '-10',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'tab',
     'title' => 'Friends',
+    'description' => '',
     'weight' => '0',
   ));
   $handler = $view->new_display('page', 'Page (pending)', 'page_2');
@@ -304,9 +325,9 @@ function flag_friend_views_default_views() {
       'validate_argument_user_flag_test' => 'flaggable',
       'validate_argument_user_flag_id_type' => 'id',
       'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-                                return FALSE;
-                              }
-                              return TRUE;',
+                                  return FALSE;
+                                }
+                                return TRUE;',
     ),
   ));
   $handler->override_option('title', 'Friend Requests');
@@ -318,12 +339,14 @@ function flag_friend_views_default_views() {
   $handler->override_option('menu', array(
     'type' => 'tab',
     'title' => 'Friend Requests',
+    'description' => '',
     'weight' => '0',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
   ));
   $handler = $view->new_display('page', 'Page (flagged)', 'page_3');
@@ -400,12 +423,14 @@ function flag_friend_views_default_views() {
   $handler->override_option('menu', array(
     'type' => 'tab',
     'title' => 'Awaiting Friend Approvals',
+    'description' => '',
     'weight' => '0',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
   ));
   $handler = $view->new_display('block', 'Current user\'s Friends block', 'block_1');
