@@ -49,6 +49,9 @@ function flag_friend_schema() {
       )
     ),
     'primary key' => array('uid', 'friend_uid'),
+    'indexes' => array(
+      'friend_uid' => array('friend_uid'),
+    ),
   );
 
   $schema['flag_friend_message'] = array(
@@ -74,5 +77,14 @@ function flag_friend_update_6000() {
   $ret = array();  
   db_drop_primary_key($ret, 'flag_friend_message');
   db_change_field($ret, 'flag_friend_message', 'fcid', 'fcid', array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE), array('primary key' => array('fcid')));
+  return $ret;
+}
+
+/**
+ * Add additional index by friend_uid to the flag_friend table.
+ */
+function flag_friend_update_6001() {
+  $ret = array();
+  db_add_index($ret, 'flag_friend', 'friend_uid', array('friend_uid'));
   return $ret;
 }
