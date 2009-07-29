@@ -152,6 +152,7 @@ function flag_friend_get_friends($uid, $reset = NULL) {
   static $friends;
 
   if (!isset($friends[$uid]) || $reset) {
+    $friends[$uid] = array();
     $result = db_query("SELECT * FROM {flag_friend} WHERE uid = %d OR friend_uid = %d", $uid, $uid);
     while ($friend = db_fetch_object($result)) {
       // if the current user is in the uid column
