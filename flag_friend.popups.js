@@ -13,6 +13,11 @@
       if ($element.hasClass('flag-action')) {
         msg = 'Friend requested.';
       }
+      console.log($element.text());
+      
+      if ($element.text() == 'Approve') {
+        msg = 'Friend approved.';
+      }
       Popups.message('Flag friend', msg);
       location.reload();
       return false;
