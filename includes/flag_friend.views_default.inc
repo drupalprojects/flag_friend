@@ -103,6 +103,7 @@ function flag_friend_views_default_views() {
   ));
   $handler->override_option('empty', 'No Friends have been added.');
   $handler->override_option('empty_format', '1');
+  $handler->override_option('use_pager', '1');
   $handler->override_option('distinct', 1);
   $handler->override_option('style_plugin', 'table');
   $handler->override_option('style_options', array(
