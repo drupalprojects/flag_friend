@@ -171,6 +171,27 @@ function flag_friend_get_friends($uid, $reset = NULL) {
 }
 
 /**
+ * Retrieve the number of friends for the given user.
+ *
+ * @param $uid
+ *   The user id.
+ * @param $reset
+ *   Boolean trigger to reset the static cache.
+ * @return
+ *   Number of friends.
+ */
+function flag_friend_get_friend_count($uid, $reset = NULL) {
+  static $friend_count;
+
+  if (!isset($friend_count[$uid]) || $reset) {
+    $sql = "SELECT COUNT(1) FROM {flag_friend} WHERE uid = %d OR friend_uid = %d";
+    $friend_count[$uid] = db_result(db_query($sql, $uid, $uid));
+  }
+
+  return $friend_count[$uid];
+}
+
+/**
  * Implementation of hook_user().
  */
 function flag_friend_user($op, &$edit, &$account, $category = NULL) {
@@ -829,4 +850,14 @@ function flag_friend_preprocess_author_pane(&$variables) {
         break;
     }
   }
+}
+
+
+/**
+ * Implementation of hook_ctools_plugin_directory().
+ */
+function flag_friend_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'ctools') {
+    return 'plugins/'. $plugin;
+  }  
 }
