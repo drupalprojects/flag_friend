@@ -326,9 +326,9 @@ function flag_friend_views_default_views() {
       'validate_argument_user_flag_test' => 'flaggable',
       'validate_argument_user_flag_id_type' => 'id',
       'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-                                  return FALSE;
-                                }
-                                return TRUE;',
+                                    return FALSE;
+                                  }
+                                  return TRUE;',
     ),
   ));
   $handler->override_option('title', 'Friend Requests');
@@ -356,7 +356,7 @@ function flag_friend_views_default_views() {
       'label' => 'flag',
       'required' => 1,
       'flag' => 'friend',
-      'user_scope' => 'current',
+      'user_scope' => 'any',
       'id' => 'flag_content_rel',
       'table' => 'users',
       'field' => 'flag_content_rel',
@@ -364,6 +364,17 @@ function flag_friend_views_default_views() {
         'button' => 'Use default',
       ),
       'relationship' => 'none',
+    ),
+    'uid' => array(
+      'label' => 'Flag user',
+      'required' => 0,
+      'id' => 'uid',
+      'table' => 'flag_content',
+      'field' => 'uid',
+      'relationship' => 'flag_content_rel',
+      'override' => array(
+        'button' => 'Use default',
+      ),
     ),
   ));
   $handler->override_option('fields', array(
@@ -414,7 +425,56 @@ function flag_friend_views_default_views() {
       ),
     ),
   ));
-  $handler->override_option('arguments', array());
+  $handler->override_option('arguments', array(
+    'uid' => array(
+      'default_action' => 'default',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '',
+      'breadcrumb' => '',
+      'default_argument_type' => 'user',
+      'default_argument' => '',
+      'validate_type' => 'none',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'uid',
+      'table' => 'users',
+      'field' => 'uid',
+      'validate_user_argument_type' => 'uid',
+      'validate_user_roles' => array(
+        '2' => 0,
+      ),
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'uid',
+      'default_options_div_prefix' => '',
+      'default_argument_user' => 0,
+      'default_argument_fixed' => '',
+      'default_argument_php' => '',
+      'validate_argument_node_type' => array(
+        'page' => 0,
+        'smackdown' => 0,
+        'story' => 0,
+      ),
+      'validate_argument_node_access' => 0,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(),
+      'validate_argument_type' => 'tid',
+      'validate_argument_transform' => 0,
+      'validate_user_restrict_roles' => 0,
+      'validate_argument_node_flag_name' => '*relationship*',
+      'validate_argument_node_flag_test' => 'flaggable',
+      'validate_argument_node_flag_id_type' => 'id',
+      'validate_argument_user_flag_name' => '*relationship*',
+      'validate_argument_user_flag_test' => 'flaggable',
+      'validate_argument_user_flag_id_type' => 'id',
+      'validate_argument_php' => '',
+    ),
+  ));
   $handler->override_option('title', 'Awaiting Friend Approvals');
   $handler->override_option('header', 'These are users who you have requested to be friends with.');
   $handler->override_option('header_format', '1');
