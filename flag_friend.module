@@ -692,33 +692,34 @@ function flag_friend_hook_info() {
 function flag_friend_flag_friend($op, $friend, $user) {
   if (function_exists('_trigger_get_hook_aids')) {
     $aids = _trigger_get_hook_aids('flag_friend', $op);
-  }
-  switch ($op) {
-    // in these cases, the users performing the operations are flipped
-    case 'approve':
-    case 'deny':
-      $user->friend = $friend;
-      $context = array(
-        'hook' => 'flag_friend',
-        'op' => $op,
-        'user' => $friend,
-        'flag_friend' => $user,
-      );
-      break;
-    // these are normal
-    case 'request':
-    case 'remove':
-      $friend->friend = $user;
-      $context = array(
-        'hook' => 'flag_friend',
-        'op' => $op,
-        'user' => $user,
-        'flag_friend' => $friend,
-      );
-      break;
-  }
-  if ($aids) {
-    actions_do(array_keys($aids), $friend, $context);
+  
+    switch ($op) {
+      // in these cases, the users performing the operations are flipped
+      case 'approve':
+      case 'deny':
+        $user->friend = $friend;
+        $context = array(
+          'hook' => 'flag_friend',
+          'op' => $op,
+          'user' => $friend,
+          'flag_friend' => $user,
+        );
+        break;
+      // these are normal
+      case 'request':
+      case 'remove':
+        $friend->friend = $user;
+        $context = array(
+          'hook' => 'flag_friend',
+          'op' => $op,
+          'user' => $user,
+          'flag_friend' => $friend,
+        );
+        break;
+    }
+    if ($aids) {
+      actions_do(array_keys($aids), $friend, $context);
+    }
   }
 }
 
