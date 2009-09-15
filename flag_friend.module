@@ -77,9 +77,9 @@ function flag_friend_preprocess_flag(&$vars) {
         // Make this link into a remove link with
         $vars['action'] = 'unflag';
         $vars['link_href'] = str_replace('flag/confirm/flag', 'flag/confirm/unfriend', $vars['link_href']);
-        $vars['link_text'] = $vars['flag']->unflag_short;
+        $vars['link_text'] = t($vars['flag']->unflag_short);
         $vars['flag_name_css'] = 'unfriend';
-        $vars['link_title'] = $vars['flag']->unflag_long;
+        $vars['link_title'] = t($vars['flag']->unflag_long);
         break;
 
       case FLAG_FRIEND_APPROVAL:
