@@ -334,7 +334,7 @@ function flag_friend_views_default_views() {
   $handler->override_option('title', 'Friend Requests');
   $handler->override_option('header', 'These are users who would like to be your friend.');
   $handler->override_option('header_format', '1');
-  $handler->override_option('header_empty', 1);
+  $handler->override_option('header_empty', 0);
   $handler->override_option('empty', 'No Friend Requests.');
   $handler->override_option('path', 'user/%/friends/pending');
   $handler->override_option('menu', array(
