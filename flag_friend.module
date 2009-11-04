@@ -338,10 +338,10 @@ function flag_friend_form_flag_confirm_alter(&$form, &$form_state) {
  */
 function flag_friend_message_form($action, $flag, $content_id, $token) {
   $form['current'] = array('#type' => 'value', '#value' => func_get_args());
-
+  $name = db_result(db_query("SELECT name FROM {users} WHERE uid = %d", $content_id));
   $form['flag_friend_message'] = array(
     '#type' => 'textarea',
-    '#title' => t('Friend message (optional)'),
+    '#title' => t('Send @name a message (optional)', array('@name' => $name)),
     '#description' => t('Enter a message to send to this user.'),
     '#cols' => 60,
     '#rows' => 5,
