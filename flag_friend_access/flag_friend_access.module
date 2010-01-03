@@ -17,6 +17,7 @@ function flag_friend_access_node_grants($account, $op) {
     if (!empty($friends)) {
       $grants['flag_friend'] = array_keys($friends);
     }
+    $grants['flag_friend'][] = $GLOBALS['user']->uid;
     return $grants;
   }
 }
