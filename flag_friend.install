@@ -46,11 +46,19 @@ function flag_friend_schema() {
         'type' => 'int', 
         'not null' => FALSE, 
         'disp-width' => '11'
-      )
+      ),
+      'fid' => array(
+        'type' => 'serial',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
     ),
-    'primary key' => array('uid', 'friend_uid'),
+    'primary key' => array('uid', 'friend_uid', 'fid'),
     'indexes' => array(
       'friend_uid' => array('friend_uid'),
+      'uid_fid' => array('uid', 'fid'),
+      'fid' => array('fid'),
     ),
   );
 
@@ -86,5 +94,125 @@ function flag_friend_update_6000() {
 function flag_friend_update_6001() {
   $ret = array();
   db_add_index($ret, 'flag_friend', 'friend_uid', array('friend_uid'));
+  return $ret;
+}
+
+/**
+ * Perform 2.x branch updates:
+ * - Upgrade default "friend" flag.  
+ * - Add flag id column to the flag_friend table
+ * - Set (fid = "friend" flag fid) for existing relationships 
+ * - New primary key including "fid" column and new indexes.
+ * - Bulk flag users in relationships. 
+ * - Insert symmetric (with uid, friend_uid reversed) record for every 
+ *   relationship.
+ */
+function flag_friend_update_6200(&$sandbox) {
+  $ret = array();
+  $users_per_step = 50;
+  $flag = flag_get_flag('friend');
+  if (!isset($sandbox['current'])) {
+    
+    // Count batch steps.
+    // 5 to upgrade flag and DB schema
+    $sandbox['max'] = 5;
+    $rels = db_result(db_query('SELECT COUNT(*) FROM {flag_friend}'));
+    if ($rels) {
+      if (!$flag) {
+        $ret['#abort'] = array('success' => FALSE, 'query' => 'Your flag_friend table contains relationships but "friend" flag is not enabled. Please enable "friend" flag and repeat upgrade process.');
+        return $ret;
+      }
+      // 2 steps to bulk flag existing friends,
+      // 3 steps to mirror flag_friend table
+      $sandbox['max'] = $sandbox['max'] + 5;
+      // and +1 step for every $users_per_step to update their flag counts.
+      // Temporary disabled. See "default:" case switch below.
+      //$sandbox['count_users'] = db_result(db_query('SELECT COUNT(uid) FROM {users}'));
+      //$sandbox['max'] = $sandbox['max'] + ceil($sandbox['count_users'] / $users_per_step);
+    }
+    $sandbox['current'] = 1;
+  }
+  // Process batch.
+  switch($sandbox['current']) {
+    case 1:
+      // Add 'fid' column and upgrade friend flag.
+      $sandbox['current'] = 1;
+      $spec = array(
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      );
+      // If default flag is enabled, upgrade it.
+      if ($flag) {
+        $spec['initial'] = $flag->fid;
+        $flag->link_type = 'msg_confirm';
+        // Apply link defaults.
+        foreach (_flag_friend_default_link_options() as $key => $value) {
+          $flag->$key = $value;
+        }
+        $flag->save;
+      }
+      // Add fid column with initial value for "friend" flag.
+      db_add_field($ret, 'flag_friend', 'fid', $spec);
+      break;
+    
+    case 2: 
+      // Change primary key.
+      db_drop_primary_key($ret, 'flag_friend');
+      break;
+      
+    case 3:
+      db_add_primary_key($ret, 'flag_friend', array('uid', 'friend_uid', 'fid'));
+      break;
+      
+    case 4:
+      // Add new indexes.
+      db_add_index($ret, 'flag_friend', 'fid', array('fid'));
+      break;
+      
+    case 5:
+      db_add_index($ret, 'flag_friend', 'uid_fid', array('uid', 'fid'));
+      break;
+  
+    case 6:
+      // Bulk flag users in each relationship (in 2.x we don't unflag users 
+      // unless relationship is breaking).
+      $ret[] = update_sql("INSERT INTO {flag_content} (fid, content_type, content_id, uid, sid, timestamp) SELECT $flag->fid, 'user', friend_uid, uid, 0, created FROM {flag_friend}");
+      break;
+
+    case 7:
+      $ret[] = update_sql("INSERT INTO {flag_content} (fid, content_type, content_id, uid, sid, timestamp) SELECT $flag->fid, 'user', uid, friend_uid, 0, created FROM {flag_friend}");
+      break;
+      
+    case 8:
+      // Insert symmetrical records for relationships using temporary table.
+      // This should work out fast even for millions of entries.
+      $ret[] = update_sql('CREATE TABLE {flag_friend_copy} SELECT * FROM {flag_friend}');
+      break;
+      
+    case 9:
+      $ret[] = update_sql('INSERT INTO {flag_friend} (uid, friend_uid, created, fid) SELECT friend_uid, uid, created, fid FROM {flag_friend_copy}');
+      break;
+      
+    case 10:
+      $ret[] = update_sql('DROP TABLE {flag_friend_copy}');
+      break;
+      
+    default:
+      // Update flag counts. Temporary disabled until 
+      // 1) we are 100% sure that we need it
+      // 2) we figure out faster way (e.g. directly in mysql) cause with 
+      // 1xxxxx of users that could go for hours.
+      /* 
+      $from = (($sandbox['current'] - 7) * $users_per_step) +1;
+      $result = db_query_range('SELECT uid from {users}', array(), $from, $users_per_step);
+      while($user = db_fetch_array($result)) {
+        $flag->_update_count($user['uid']);
+      }
+      */
+  }
+  $ret['#finished'] = $sandbox['current'] / $sandbox['max'];
+  $sandbox['current']++;
   return $ret;
 }

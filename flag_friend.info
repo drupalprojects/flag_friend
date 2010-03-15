@@ -1,6 +1,12 @@
 ; $Id$
 name = Flag friend
-description = Flag users as friends. Implements it's own flag and a form for sending a user a message upon flag.
+description = Use Flag to set up arbitrary user relationships that require confirmations from both parties.
 dependencies[] = flag
 core = 6.x
 package = Flags
+; Information added by drupal.org packaging script on 2010-02-20
+version = "6.x-2.x-dev"
+core = "6.x"
+project = "flag_friend"
+datestamp = "1266624362"
+
