@@ -226,7 +226,7 @@ function flag_friend_profile_alter(&$account) {
   if ($account->uid == $GLOBALS['user']->uid) {
     $flag = flag_get_flag('friend');
     if (!empty($flag) && isset($account->content['flags'][$flag->name])) {
-      unset($account->content['flags'][$flag->name]);
+      $account->content['flags'][$flag->name]['#access'] = FALSE;
     }
   }
 }
