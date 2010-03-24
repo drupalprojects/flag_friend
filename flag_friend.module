@@ -212,20 +212,22 @@ function flag_friend_user($op, &$edit, &$account, $category = NULL) {
         return $form;
       }
       break;
-    case 'view':
-      global $user;
-      // Remove link if we're looking at our own so we cannot friend ourself
-      $flag = flag_get_flag('friend');
-      if ($user->uid == $account->uid) {
-        if ($account->content['flags'][$flag->name]) {
-          unset($account->content['flags'][$flag->name]);
-        }
-      }
-      break;
     case 'delete':
       // remove any friend relationships if an account is removed
       db_query("DELETE FROM {flag_friend} WHERE uid = %d OR friend_uid = %d", $account->uid, $account->uid);
       break;
+  }
+}
+
+/**
+ * Implementation of hook_profile_alter().
+ */
+function flag_friend_profile_alter(&$account) {
+  if ($account->uid == $GLOBALS['user']->uid) {
+    $flag = flag_get_flag('friend');
+    if (!empty($flag) && isset($account->content['flags'][$flag->name])) {
+      unset($account->content['flags'][$flag->name]);
+    }
   }
 }
 
