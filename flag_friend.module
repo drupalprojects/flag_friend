@@ -730,7 +730,10 @@ function flag_friend_theme() {
  */
 function flag_friend_init() {
   // Include modules integrations.
-  $contrib = array('activity', 'author_pane', 'popups', 'token', 'trigger');
+  // Integrations that are not ported or tested yet are commented below.
+  $contrib = array('author_pane');
+  // 'activity', 'popups', 'token', 'trigger'
+  
   $path = drupal_get_path('module', 'flag_friend');
   foreach ($contrib as $module) {
     if (module_exists($module)) {
@@ -751,9 +754,14 @@ function flag_friend_views_api() {
 
 /**
  * Implementation of hook_ctools_plugin_directory().
+ * 
+ * Temporary disabled: 
+ * -- access plugin needs Flag selection and selection of which user is which 
+ *    party ("originating" or "terminating") and checking function change.
+ * -- content type plugin needs Flag selection and counting function change
  */
 function flag_friend_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'ctools' && $plugin = 'content_types') {
-    return $plugin;
+  if ($module == 'ctools') {
+    //return 'plugins/'. $plugin;
   }
 }
