@@ -531,8 +531,10 @@ function flag_friend_flag($event, $flag, $content_id, $account, $fcid) {
   
   if ($event == 'flag') {
     // If both are now flagged, record the relationship.
-    if ($status == FLAG_FRIEND_BOTH) { 
+    if ($status == FLAG_FRIEND_BOTH) {
       if (_flag_friend_relationship_db('create', $account, $content_id, $flag)) {
+        // Store parties for the token processing.
+        $friend->friend = $user;
         // fire trigger
         module_invoke_all('flag_friend', 'approve', $target_account, $account, $flag);
       }
@@ -731,8 +733,8 @@ function flag_friend_theme() {
 function flag_friend_init() {
   // Include modules integrations.
   // Integrations that are not ported or tested yet are commented below.
-  $contrib = array('author_pane');
-  // 'activity', 'popups', 'token', 'trigger'
+  $contrib = array('author_pane', 'token', 'trigger');
+  // 'activity', 'popups',
   
   $path = drupal_get_path('module', 'flag_friend');
   foreach ($contrib as $module) {

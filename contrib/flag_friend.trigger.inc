@@ -33,8 +33,6 @@ function flag_friend_hook_info() {
 
 /**
  * Implementation of hook_trigger_name().
- * 
- * FIXME: May still need work.
  */
 function flag_friend_flag_friend($op, $friend, $user, $flag) {
   if (function_exists('_trigger_get_hook_aids')) {
@@ -42,6 +40,7 @@ function flag_friend_flag_friend($op, $friend, $user, $flag) {
   
     switch ($op) {
       // in this case, the users performing the operations are flipped
+      case 'approve':
       case 'deny':
         $user->friend = $friend;
         $context = array(
@@ -53,7 +52,6 @@ function flag_friend_flag_friend($op, $friend, $user, $flag) {
         );
         break;
       // these are normal
-      case 'approve':
       case 'request':
       case 'remove':
       case 'cancel':

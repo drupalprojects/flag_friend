@@ -12,8 +12,8 @@ function flag_friend_token_list($type = 'all') {
   if ($type == 'flag_friend') {
     $tokens = array();
     $tokens['flag_friend'] = array(
-      'requestor' => t('The name of the user who originally made the request.'),
-      'requestee' => t('The name of the user who originally received the request.'),
+      'requestor' => t('The name of the user who originally made the request. For removal event the name of the user performing the removal.'),
+      'requestee' => t('The name of the user who originally received the request. For removal event the name of the user being removed.'),
       'requestor-uid' => t("Requestor's ID."),
       'requestee-uid' => t("Requestee's ID."),
       'requestor-url' => t("The URL of the requestor's profile page."),
