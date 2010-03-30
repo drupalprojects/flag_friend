@@ -33,13 +33,17 @@ function flag_friend_views_default_views() {
     'field' => 'flag_content_rel',
     'relationship' => 'none',
   ),
-  'flag_friend_terminating' => array(
-    'label' => 'ff relationship targets',
+  'flag_friend_users' => array(
+    'label' => 'flag friend users',
     'required' => 1,
-    'id' => 'flag_friend_terminating',
+    'flag' => 'friend',
+    'id' => 'flag_friend_users',
     'table' => 'users',
-    'field' => 'flag_friend_terminating',
+    'field' => 'flag_friend_users',
     'relationship' => 'none',
+    'override' => array(
+      'button' => 'Override',
+  ),
   ),
   ));
   $handler->override_option('fields', array(
@@ -107,7 +111,7 @@ function flag_friend_views_default_views() {
     'id' => 'uid',
     'table' => 'flag_friend',
     'field' => 'uid',
-    'relationship' => 'flag_friend_terminating',
+    'relationship' => 'flag_friend_users',
     'validate_user_argument_type' => 'uid',
     'validate_user_roles' => array(
       '2' => 0,
@@ -156,8 +160,11 @@ function flag_friend_views_default_views() {
     'validate_argument_user_flag_name' => '*relationship*',
     'validate_argument_user_flag_test' => 'flaggable',
     'validate_argument_user_flag_id_type' => 'id',
-    'validate_argument_is_member' => 0,
+    'validate_argument_is_member' => 'OG_VIEWS_DO_NOT_VALIDATE_MEMBERSHIP',
     'validate_argument_php' => '',
+    'validate_argument_group_node_type' => array(
+      'site_group' => 0,
+  ),
   ),
   ));
   $handler->override_option('filters', array(
@@ -174,23 +181,6 @@ function flag_friend_views_default_views() {
     'table' => 'users',
     'field' => 'status',
     'relationship' => 'none',
-  ),
-  'fid' => array(
-    'operator' => 'or',
-    'value' => array(
-      '6' => '6',
-  ),
-    'group' => '0',
-    'exposed' => FALSE,
-    'expose' => array(
-      'operator' => FALSE,
-      'label' => '',
-  ),
-    'id' => 'fid',
-    'table' => 'flag_friend',
-    'field' => 'fid',
-    'relationship' => 'flag_friend_terminating',
-    'reduce_duplicates' => 0,
   ),
   ));
   $handler->override_option('access', array(
@@ -238,26 +228,6 @@ function flag_friend_views_default_views() {
   'default' => '-1',
   ));
   $handler = $view->new_display('page', 'Page (friends)', 'page_1');
-  $handler->override_option('relationships', array(
-  'flag_content_rel' => array(
-    'label' => 'flag',
-    'required' => 1,
-    'flag' => 'friend',
-    'user_scope' => 'any',
-    'id' => 'flag_content_rel',
-    'table' => 'users',
-    'field' => 'flag_content_rel',
-    'override' => array(
-      'button' => 'Use default',
-  ),
-    'relationship' => 'none',
-  ),
-  'flag_friend_terminating' => array(
-    'id' => 'flag_friend_terminating',
-    'table' => 'users',
-    'field' => 'flag_friend_terminating',
-  ),
-  ));
   $handler->override_option('fields', array(
   'picture' => array(
     'label' => 'Friend',
@@ -334,7 +304,7 @@ function flag_friend_views_default_views() {
     'id' => 'uid',
     'table' => 'flag_friend',
     'field' => 'uid',
-    'relationship' => 'flag_friend_terminating',
+    'relationship' => 'flag_friend_users',
     'validate_user_argument_type' => 'uid',
     'validate_user_roles' => array(
       '2' => 0,
@@ -386,11 +356,14 @@ function flag_friend_views_default_views() {
     'validate_argument_user_flag_name' => '*relationship*',
     'validate_argument_user_flag_test' => 'flaggable',
     'validate_argument_user_flag_id_type' => 'id',
-    'validate_argument_is_member' => 0,
+    'validate_argument_is_member' => 'OG_VIEWS_DO_NOT_VALIDATE_MEMBERSHIP',
     'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
                                     return FALSE;
                                   }
                                   return TRUE;',
+    'validate_argument_group_node_type' => array(
+      'site_group' => 0,
+  ),
   ),
   ));
   $handler->override_option('title', 'Friends');
@@ -422,10 +395,17 @@ function flag_friend_views_default_views() {
   ),
     'relationship' => 'none',
   ),
-  'flag_friend_terminating' => array(
-    'id' => 'flag_friend_terminating',
+  'flag_friend_users' => array(
+    'label' => 'flag friend users',
+    'required' => 0,
+    'flag' => 'friend',
+    'id' => 'flag_friend_users',
     'table' => 'users',
-    'field' => 'flag_friend_terminating',
+    'field' => 'flag_friend_users',
+    'override' => array(
+      'button' => 'Use default',
+  ),
+    'relationship' => 'none',
   ),
   ));
   $handler->override_option('fields', array(
@@ -657,7 +637,7 @@ function flag_friend_views_default_views() {
     'id' => 'fid',
     'table' => 'flag_friend',
     'field' => 'fid',
-    'relationship' => 'flag_friend_terminating',
+    'relationship' => 'flag_friend_users',
     'override' => array(
       'button' => 'Use default',
   ),
@@ -731,12 +711,13 @@ function flag_friend_views_default_views() {
   ),
     'relationship' => 'none',
   ),
-  'flag_friend_terminating' => array(
-    'label' => 'ff relationship targets',
+  'flag_friend_users' => array(
+    'label' => 'flag friend users',
     'required' => 0,
-    'id' => 'flag_friend_terminating',
+    'flag' => 'friend',
+    'id' => 'flag_friend_users',
     'table' => 'users',
-    'field' => 'flag_friend_terminating',
+    'field' => 'flag_friend_users',
     'override' => array(
       'button' => 'Use default',
   ),
@@ -903,11 +884,14 @@ function flag_friend_views_default_views() {
     'validate_argument_user_flag_name' => '*relationship*',
     'validate_argument_user_flag_test' => 'flaggable',
     'validate_argument_user_flag_id_type' => 'id',
-    'validate_argument_is_member' => 0,
+    'validate_argument_is_member' => 'OG_VIEWS_DO_NOT_VALIDATE_MEMBERSHIP',
     'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
                                     return FALSE;
                                   }
                                   return TRUE;',
+    'validate_argument_group_node_type' => array(
+      'site_group' => 0,
+  ),
   ),
   ));
   $handler->override_option('filters', array(
@@ -937,10 +921,10 @@ function flag_friend_views_default_views() {
     'id' => 'fid',
     'table' => 'flag_friend',
     'field' => 'fid',
-    'relationship' => 'flag_friend_terminating',
     'override' => array(
       'button' => 'Use default',
   ),
+    'relationship' => 'flag_friend_users',
     'reduce_duplicates' => 0,
   ),
   ));
@@ -967,6 +951,7 @@ function flag_friend_views_default_views() {
   $handler->override_option('title', 'User\'s friends');
   $handler->override_option('block_description', '');
   $handler->override_option('block_caching', -1);
+
   $views[$view->name] = $view;
   return $views;
 }

@@ -26,6 +26,9 @@ function flag_friend_views_handlers() {
         'parent' => 'views_handler_filter_many_to_one',
         'file' => 'flag_friend_handler_filters.inc',
       ),
+      'flag_friend_handler_relationship_flag_friend_users' => array(
+        'parent' => 'views_handler_relationship',
+      ),
     ),
   );
 }
@@ -52,50 +55,31 @@ function flag_friend_views_plugins() {
 
 /**
  * Implementation of hook_views_data().
- * 
- * To find users in a relationship, *always* JOIN flag_friend to the users 
- * table on "friend_uid" and provide "uid" argument.
- * 
- * Note that we always store 2 entries for each bi-directional relationship
- * so we only need to select one column.
- * If Flag Friend is going to support uni-directional relationships, 
- * we will use: 
- *   - "uid" as "source user id" or "originating user id"
- *   - "friend_uid" as "target user uid" or "terminating user uid".
- *   
- * With uni-directional relationships we will:
- * - JOIN on "friend_uid" and provide "uid" to find "users that 
- *   are my relationship targets"
- * - JOIN on "uid" and provide "friend_uid" to find "users that 
- *   target me in relationship".
- *
- **/
+ */
 function flag_friend_views_data() {
   $data = array();
 
-  // flag_friend table. .
-  // We are not joining on uid or friend_uid automatically to let user decide
-  // how to join exactly by selecting proper relationship. 
+  // flag_friend table.
   $data['flag_friend']['table']['group'] = t('Flag friend');
   $data['flag_friend']['table']['join'] = array();
+  
   // Arguments.
   // Provide terminating user to a view.  
   $data['flag_friend']['uid'] = array(
-    'title' => t('Users originating a relationship'),
-    'help' => t('Users that are on <em>originating</em> side of a relationship'),
+    'title' => t('Flag Friend users'),
     'argument' => array(
+      'help' => t('Users in a Flag Friend relationship with UID argument'),
       'handler' => 'views_handler_argument_numeric',
     ),
-  );  
-  
-  // Provide originating user to a view.
-  $data['flag_friend']['friend_uid'] = array(
-    'title' => t('Users terminating a relationship'),
-    'help' => t('Users that are on <em>receiving</em> side of a relationship'),
-    'argument' => array(
-      'handler' => 'views_handler_argument_numeric',
-    ),
+    'relationship' => array(
+      'help' => t('Provide users that are Flag Friend relationship parties'),
+      'label' => t('flag friend party'),
+      'base' => 'users',
+      'base field' => 'uid',
+      'relationship field' => 'uid',
+    )
   );
+  
   // Filter for relationship type.
   $data['flag_friend']['fid'] = array(     
     'title' => t('Relationship'),
@@ -135,7 +119,7 @@ function flag_friend_views_data() {
   // message field
   $data['flag_friend_message']['message'] = array(
     'title' => t('Message'),
-    'help' => t('Display the message for any friend flags. (Only useful for a list of pending friend requests.)'),
+    'help' => t('Display the message for any friend flags. Only useful for a list of pending friend requests.'),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => FALSE,
@@ -182,30 +166,17 @@ function flag_friend_views_data_alter(&$data) {
     ),
   );
   
-  // Flag friend relationships. For 2-way relationship (e.g. "friend") they  
-  // work same way. Difference is for 1-way relationships.
-  
-  // "my relationship targets" for 1-way relationships.  
-  $data['users']['flag_friend_terminating'] = array(
+  // Fid must present in a JOIN criteria so we need custom relationship to join
+  // flag_friend table properly.
+  $data['users']['flag_friend_users'] = array(
     'group' => t('Flag friend'),
-    'title' => t('users terminating a relationship'),
-    'help' => t('Limits users to <em>terminating</em> 1 way relationship, or participating in 2-way one.'),
+    'title' => t('Flag Friend users'),
+    'help' => t('Users which participate in a Flag Friend relationship.'),
     'relationship' => array(
-      'label' => t('ff relationship'),
+      'handler' => 'flag_friend_handler_relationship_flag_friend_users',
+      'label' => t('flag friend users'),
       'base' => 'flag_friend',
       'base field' => 'friend_uid',
-      'relationship field' => 'uid',
-    ),
-  );
-  // "users who are sources of my relationships" for 1-way relationships. 
-  $data['users']['flag_friend_originating'] = array(
-    'group' => t('Flag friend'),
-    'title' => t('users originating a relationship'),
-    'help' => t('Limits users to <em>originating</em> 1 way relationship, or participating in 2-way one.'),
-    'relationship' => array(
-      'label' => t('ff relationship'),
-      'base' => 'flag_friend',
-      'base field' => 'uid',
       'relationship field' => 'uid',
     ),
   );

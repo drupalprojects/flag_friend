@@ -18,7 +18,7 @@ function flag_friend_confirm(&$form_state, $link_type, $op, $flag_name, $content
     '#type' => 'value',
     '#value' => $link_type,
   );
-  // Not "op" cause that's used by form itself.
+  // Not "op" cause that's used by the form itself.
   $form['ff_op'] = array(
     '#type' => 'value',
     '#value' => $op,
@@ -86,7 +86,7 @@ function flag_friend_confirm_submit($form, &$form_state) {
     $account =& $GLOBALS['user'];
   }
   
-  // Store message in global variable so we can access it in hook_flag().
+  // Store message in a global variable so we can access it in hook_flag().
   if (isset($form_state['values']['relationship_request_message'])) {
     $flag_friend_request_message = $form_state['values']['relationship_request_message'];
   }
@@ -109,10 +109,10 @@ function flag_friend_confirm_submit($form, &$form_state) {
  */
 function _flag_friend_form_flag_form_alter(&$form, &$form_state) {
   $flag = $form['#flag'];
+  // Remove our link type manually in case it's not applicable and terminate
+  // early.
+  // TODO: This may become unneeded. See http://drupal.org/node/721474
   if ($flag->content_type != 'user') {
-    // Remove our link type manually in case it's not applicable and terminate
-    // early.
-    // TODO: This may become unneeded. See http://drupal.org/node/721474
     unset($form['display']['link_type']['#options']['msg_confirm']);
     return;
   }
@@ -125,7 +125,7 @@ function _flag_friend_form_flag_form_alter(&$form, &$form_state) {
     }
   }
   // Insert warning.
-  $warning  = t('<strong>Note that message settings have no effect with Flag Friend link types. Flag Friend has own messages configured in <em>Link options</em> below.</strong>');
+  $warning  = t('<strong>Note that message settings have no effect with Flag Friend link types. Flag Friend has own messages configured in <em>Flag Friend options</em> below.</strong>');
   $warning .= '<br/><br/>';
   $form['messages']['flag_friend_description'] = array(
     '#value' => $warning,
@@ -133,290 +133,321 @@ function _flag_friend_form_flag_form_alter(&$form, &$form_state) {
   );
   // We could remove "required" validation but that would break Flag UX for 
   // other user flags. Thus this is most simple we can do.
-  $note = t(' For Flag Friend flags insert random garbage here.');
-  $form['messages']['flag_short']['#description'] .= $note;
-  $form['messages']['unflag_short']['#description'] .= $note;
+  $note = t('For Flag Friend flags insert random garbage here.');
+  $form['messages']['flag_short']['#description'] .= ' ' . $note;
+  $form['messages']['unflag_short']['#description'] .= ' ' . $note;
+
+  $fieldset = array(
+    '#type' => 'fieldset',
+  );
+  
+  $form['flag_friend_options'] = $fieldset + array(
+    '#title' => t('Flag Friend options'),
+    '#weight' => 20,
+  );
+  $form['flag_friend_options']['flag_friend_notes'] = array(
+    '#value' => t("Note: these are Flag Friend module options. You don't need any of these for simple user flags."),
+  );
+  
+  $fieldset['#collapsible'] = TRUE;
+  $fieldset['#collapsed'] = TRUE;
   
   // Request
-  $form['link_options']['request_short'] = array(
+  $form['flag_friend_options']['request_fieldset'] = $fieldset + array(
+    '#title' => t('Relationship request'),
+  );
+  $form['flag_friend_options']['request_fieldset']['request_short'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: link title.'),
+    '#title' => t('Request link text'),
     '#default_value' => $flag->request_short,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the link.'),
     '#access' => empty($flag->locked['request_short']),
   );
-  $form['link_options']['request_long'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_long'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: link description'),
+    '#title' => t('Request link description'),
     '#default_value' => $flag->request_long,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the <em>title</em> attribute of the link.'),
     '#access' => empty($flag->locked['request_long']),
   );
-  $form['link_options']['request_question'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_question'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: question'),
+    '#title' => t('Request question'),
     '#default_value' => $flag->request_question,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the confirmation question in the confirmation form.'),
     '#access' => empty($flag->locked['request_question']),
   );
-  $form['link_options']['request_yes'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_yes'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: <em>yes</em> answer text'),
+    '#title' => t('Request <em>yes</em> answer text'),
     '#default_value' => $flag->request_yes,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>Yes</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['request_yes']),
   );
-  $form['link_options']['request_no'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_no'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: <em>no</em> answer text'),
+    '#title' => t('Request <em>no</em> answer text'),
     '#default_value' => $flag->request_no,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>No</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['request_no']),
   );
-  $form['link_options']['request_msg'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_msg'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: default message text'),
+    '#title' => t('Request default message text'),
     '#default_value' => $flag->request_msg,
     '#description' => t('Default text displayed inside message textarea in the confirmation form if the user has requested relationship.'),
     '#access' => empty($flag->locked['request_msg']),
   );
-  $form['link_options']['request_msg_title'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_msg_title'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: message title'),
+    '#title' => t('Request message title'),
     '#default_value' => $flag->request_msg_title,
     '#description' => t('Text displayed as title of message textarea in the confirmation form if the user has requested relationship.'),
     '#access' => empty($flag->locked['request_msg_title']),
   );
-  $form['link_options']['request_msg_desc'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_msg_desc'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: message description'),
+    '#title' => t('Request message description'),
     '#default_value' => $flag->request_msg_desc,
     '#description' => t('Text displayed as description of message textarea in the confirmation form if the user has requested relationship.'),
     '#access' => empty($flag->locked['request_msg_desc']),
   );
-  $form['link_options']['request_success_message'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_success_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: success message'),
+    '#title' => t('Request success message'),
     '#default_value' => $flag->request_success_message,
     '#description' => t('Text displayed on success of relationship request operation.'),
     '#access' => empty($flag->locked['request_success_message']),
   );
-  $form['link_options']['request_failed_message'] = array(
+  $form['flag_friend_options']['request_fieldset']['request_failed_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Request: failure message'),
+    '#title' => t('Request failure message'),
     '#default_value' => $flag->request_failed_message,
     '#description' => t('Text displayed on failure of relationship request operation.'),
     '#access' => empty($flag->locked['request_failed_message']),
   ); 
   
   // Cancel pending
-  $form['link_options']['cancel_short'] = array(
+  $form['flag_friend_options']['cancel_fieldset'] = $fieldset + array(
+    '#title' => t('Relationship request cancellation'),
+  );
+  $form['flag_friend_options']['cancel_fieldset']['cancel_short'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cancel: link title.'),
+    '#title' => t('Cancel link text'),
     '#default_value' => $flag->cancel_short,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the link.'),
     '#access' => empty($flag->locked['cancel_short']),
   );
-  $form['link_options']['cancel_long'] = array(
+  $form['flag_friend_options']['cancel_fieldset']['cancel_long'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cancel: link description'),
+    '#title' => t('Cancel link description'),
     '#default_value' => $flag->cancel_long,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the <em>title</em> attribute of the link.'),
     '#access' => empty($flag->locked['cancel_long']),
   );
-  $form['link_options']['cancel_question'] = array(
+  $form['flag_friend_options']['cancel_fieldset']['cancel_question'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cancel: question'),
+    '#title' => t('Cancel question'),
     '#default_value' => $flag->cancel_question,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the confirmation question in the confirmation form.'),
     '#access' => empty($flag->locked['cancel_question']),
   );
-  $form['link_options']['cancel_yes'] = array(
+  $form['flag_friend_options']['cancel_fieldset']['cancel_yes'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cancel: <em>yes</em> answer text'),
+    '#title' => t('Cancel <em>yes</em> answer text'),
     '#default_value' => $flag->cancel_yes,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>Yes</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['cancel_yes']),
   );
-  $form['link_options']['cancel_no'] = array(
+  $form['flag_friend_options']['cancel_fieldset']['cancel_no'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cancel: <em>no</em> answer text'),
+    '#title' => t('Cancel <em>no</em> answer text'),
     '#default_value' => $flag->cancel_no,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>No</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['cancel_no']),
   );
-  $form['link_options']['cancel_success_message'] = array(
+  $form['flag_friend_options']['cancel_fieldset']['cancel_success_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cancel: success message'),
+    '#title' => t('Cancel success message'),
     '#default_value' => $flag->cancel_success_message,
     '#description' => t('Text displayed on success of cancellation of relationship request.'),
     '#access' => empty($flag->locked['cancel_success_message']),
   );
-  $form['link_options']['cancel_failed_message'] = array(
+  $form['flag_friend_options']['cancel_fieldset']['cancel_failed_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cancel: failure message'),
+    '#title' => t('Cancel failure message'),
     '#default_value' => $flag->cancel_failed_message,
     '#description' => t('Text displayed on failure of cancellation of relationship request.'),
     '#access' => empty($flag->locked['cancel_failed_message']),
   );
   
   // Approve request
-  $form['link_options']['approve_short'] = array(
+  $form['flag_friend_options']['approve_fieldset'] = $fieldset + array(
+    '#title' => t('Relationship request approval'),
+  );
+  $form['flag_friend_options']['approve_fieldset']['approve_short'] = array(
     '#type' => 'textfield',
-    '#title' => t('Approve: link title.'),
+    '#title' => t('Approve link text'),
     '#default_value' => $flag->approve_short,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the link.'),
     '#access' => empty($flag->locked['approve_short']),
   );
-  $form['link_options']['approve_long'] = array(
+  $form['flag_friend_options']['approve_fieldset']['approve_long'] = array(
     '#type' => 'textfield',
-    '#title' => t('Approve: link description'),
+    '#title' => t('Approve link description'),
     '#default_value' => $flag->approve_long,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the <em>title</em> attribute of the link.'),
     '#access' => empty($flag->locked['approve_long']),
   );
-  $form['link_options']['approve_question'] = array(
+  $form['flag_friend_options']['approve_fieldset']['approve_question'] = array(
     '#type' => 'textfield',
-    '#title' => t('Approve: question'),
+    '#title' => t('Approve question'),
     '#default_value' => $flag->approve_question,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the confirmation question in the confirmation form.'),
     '#access' => empty($flag->locked['approve_question']),
   );
-  $form['link_options']['approve_yes'] = array(
+  $form['flag_friend_options']['approve_fieldset']['approve_yes'] = array(
     '#type' => 'textfield',
-    '#title' => t('Approve: <em>yes</em> answer text'),
+    '#title' => t('Approve <em>yes</em> answer text'),
     '#default_value' => $flag->approve_yes,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>Yes</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['approve_yes']),
   );
-  $form['link_options']['approve_no'] = array(
+  $form['flag_friend_options']['approve_fieldset']['approve_no'] = array(
     '#type' => 'textfield',
-    '#title' => t('Approve: <em>no</em> answer text'),
+    '#title' => t('Approve <em>no</em> answer text'),
     '#default_value' => $flag->approve_no,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>No</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['approve_no']),
   );
-  $form['link_options']['approve_success_message'] = array(
+  $form['flag_friend_options']['approve_fieldset']['approve_success_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Approve: success message'),
+    '#title' => t('Approve success message'),
     '#default_value' => $flag->approve_success_message,
     '#description' => t('Text displayed on success of approvement of relationship request.'),
     '#access' => empty($flag->locked['approve_success_message']),
   );
-  $form['link_options']['approve_failed_message'] = array(
+  $form['flag_friend_options']['approve_fieldset']['approve_failed_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Approve: failure message'),
+    '#title' => t('Approve failure message'),
     '#default_value' => $flag->approve_failed_message,
     '#description' => t('Text displayed on failure of approvement of relationship request.'),
     '#access' => empty($flag->locked['approve_failed_message']),
   );
   
   // Deny request
-  $form['link_options']['deny_short'] = array(
+  $form['flag_friend_options']['deny_fieldset'] = $fieldset + array(
+    '#title' => t('Relationship request denial'),
+  );
+  $form['flag_friend_options']['deny_fieldset']['deny_short'] = array(
     '#type' => 'textfield',
-    '#title' => t('Deny: link title.'),
+    '#title' => t('Deny link text'),
     '#default_value' => $flag->deny_short,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the link.'),
     '#access' => empty($flag->locked['deny_short']),
   );
-  $form['link_options']['deny_long'] = array(
+  $form['flag_friend_options']['deny_fieldset']['deny_long'] = array(
     '#type' => 'textfield',
-    '#title' => t('Deny: link description'),
+    '#title' => t('Deny link description'),
     '#default_value' => $flag->deny_long,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the <em>title</em> attribute of the link.'),
     '#access' => empty($flag->locked['deny_long']),
   );
-  $form['link_options']['deny_question'] = array(
+  $form['flag_friend_options']['deny_fieldset']['deny_question'] = array(
     '#type' => 'textfield',
-    '#title' => t('Deny: question'),
+    '#title' => t('Deny question'),
     '#default_value' => $flag->deny_question,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the confirmation question in the confirmation form.'),
     '#access' => empty($flag->locked['deny_question']),
   );
-  $form['link_options']['deny_yes'] = array(
+  $form['flag_friend_options']['deny_fieldset']['deny_yes'] = array(
     '#type' => 'textfield',
-    '#title' => t('Deny: <em>yes</em> answer text'),
+    '#title' => t('Deny <em>yes</em> answer text'),
     '#default_value' => $flag->deny_yes,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>Yes</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['deny_yes']),
   );
-  $form['link_options']['deny_no'] = array(
+  $form['flag_friend_options']['deny_fieldset']['deny_no'] = array(
     '#type' => 'textfield',
-    '#title' => t('Deny: <em>no</em> answer text'),
+    '#title' => t('Deny <em>no</em> answer text'),
     '#default_value' => $flag->deny_no,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>No</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['deny_no']),
   );
-  $form['link_options']['deny_success_message'] = array(
+  $form['flag_friend_options']['deny_fieldset']['deny_success_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Deny: success message'),
+    '#title' => t('Deny success message'),
     '#default_value' => $flag->deny_success_message,
     '#description' => t('Text displayed on success of denial of relationship request.'),
     '#access' => empty($flag->locked['deny_success_message']),
   );
-  $form['link_options']['deny_failed_message'] = array(
+  $form['flag_friend_options']['deny_fieldset']['deny_failed_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Deny: failure message'),
+    '#title' => t('Deny failure message'),
     '#default_value' => $flag->deny_failed_message,
     '#description' => t('Text displayed on failure of denial of relationship request.'),
     '#access' => empty($flag->locked['deny_failed_message']),
   );
   
   // Remove
-  $form['link_options']['remove_short'] = array(
+  $form['flag_friend_options']['remove_fieldset'] = $fieldset + array(
+    '#title' => t('Relationship removal'),
+  );
+  $form['flag_friend_options']['remove_fieldset']['remove_short'] = array(
     '#type' => 'textfield',
-    '#title' => t('Remove: link title.'),
+    '#title' => t('Remove link text'),
     '#default_value' => $flag->remove_short,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the link.'),
     '#access' => empty($flag->locked['remove_short']),
   );
-  $form['link_options']['remove_long'] = array(
+  $form['flag_friend_options']['remove_fieldset']['remove_long'] = array(
     '#type' => 'textfield',
-    '#title' => t('Remove: link description'),
+    '#title' => t('Remove link description'),
     '#default_value' => $flag->remove_long,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the <em>title</em> attribute of the link.'),
     '#access' => empty($flag->locked['remove_long']),
   );
-  $form['link_options']['remove_question'] = array(
+  $form['flag_friend_options']['remove_fieldset']['remove_question'] = array(
     '#type' => 'textfield',
-    '#title' => t('Remove: question'),
+    '#title' => t('Remove question'),
     '#default_value' => $flag->remove_question,
-    '#description' => t(''),
+    '#description' => t('Text displayed as the confirmation question in the confirmation form.'),
     '#access' => empty($flag->locked['remove_question']),
   );
-  $form['link_options']['remove_yes'] = array(
+  $form['flag_friend_options']['remove_fieldset']['remove_yes'] = array(
     '#type' => 'textfield',
-    '#title' => t('Remove: <em>yes</em> answer text'),
+    '#title' => t('Remove <em>yes</em> answer text'),
     '#default_value' => $flag->remove_yes,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>Yes</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['remove_yes']),
   );
-  $form['link_options']['remove_no'] = array(
+  $form['flag_friend_options']['remove_fieldset']['remove_no'] = array(
     '#type' => 'textfield',
-    '#title' => t('Remove: <em>no</em> answer text'),
+    '#title' => t('Remove <em>no</em> answer text'),
     '#default_value' => $flag->remove_no,
-    '#description' => t(''),
+    '#description' => t('Text displayed as <em>No</em> answer in the confirmation form.'),
     '#access' => empty($flag->locked['remove_no']),
   );
-  $form['link_options']['remove_success_message'] = array(
+  $form['flag_friend_options']['remove_fieldset']['remove_success_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Remove: success message'),
+    '#title' => t('Remove success message'),
     '#default_value' => $flag->remove_success_message,
     '#description' => t('Text displayed on success of relationship removal.'),
     '#access' => empty($flag->locked['remove_success_message']),
   );
-  $form['link_options']['remove_failed_message'] = array(
+  $form['flag_friend_options']['remove_fieldset']['remove_failed_message'] = array(
     '#type' => 'textfield',
-    '#title' => t('Remove: failure message'),
+    '#title' => t('Remove failure message'),
     '#default_value' => $flag->remove_failed_message,
     '#description' => t('Text displayed on failure of relationship removal.'),
     '#access' => empty($flag->locked['remove_failed_message']),
   );
   
+  uasort($form, 'element_sort');
 }
 
 /**
- * Theme function for the remove relationship confirmation form.
+ * Theme function for Flag Friend relationship confirmation forms.
  */
 function theme_flag_friend_confirm_form($form) {
   return drupal_render($form);

@@ -17,6 +17,7 @@ function flag_friend_flag_friend_links_ctools_content_types() {
     'description' => t('Flag Friend Links for adding / removing friends'),
     'required context' => new ctools_context_required(t('User'), 'user'),
     'category' => t('Miscellaneous'),
+    'defaults' => array('flag' => ''),
   );
 }
 
@@ -35,7 +36,12 @@ function flag_friend_flag_friend_links_content_type_render($subtype, $conf, $pan
   $block = new stdClass();
   if ($account) {
     $block->title = t("Flag friend links");
-    $block->content = flag_friend_links_get_link_values($account);
+    $flag = flag_get_flag($conf['flag']);
+    $status = flag_friend_relationship_status($flag, $GLOBALS['user']->uid, $account->uid);
+    $block->content = flag_create_link($flag->name, $account->uid);
+    if ($status == FLAG_FRIEND_APPROVAL) {
+      $block->content .= $flag->theme('deny', $account->uid);
+    }
   }
   else {
     // If somehow the user context is empty, this is a fallback message but
@@ -47,10 +53,16 @@ function flag_friend_flag_friend_links_content_type_render($subtype, $conf, $pan
 
 
 /**
- * Empty form so we can have the default override title.
+ * Plugin edit form.
  */
 function flag_friend_flag_friend_links_content_type_edit_form(&$form, &$form_state) {
-  // Does nothing!
+  $conf = $form_state['conf'];
+  $form['flag'] = array(
+    '#type' => 'select',
+    '#title' => t('Relationship flag'),
+    '#options' => flag_friend_get_flags('names'),
+    '#default_value' => $conf['flag'],
+  );
 }
 
 function flag_friend_flag_friend_links_content_type_edit_form_submit(&$form, &$form_state) {
@@ -69,37 +81,4 @@ function flag_friend_flag_friend_links_content_type_edit_form_submit(&$form, &$f
 
 function flag_friend_flag_friend_links_content_type_admin_title($subtype, $conf, $context) {
   return t('"@s" flag friend links', array('@s' => $context->identifier));
-}
-
-/**
- * Get the links for adding or removing friends. Also cancel request link is
- * shown.
- */
-function flag_friend_links_get_link_values($account = NULL) {
-  global $user;
-  // If is the current user, no link is shown.
-  if ($user->uid <> $account->uid) {
-    // Check if users are currently friends
-    $flag = flag_get_flag('friend');
-    $flag_status = flag_friend_determine_friend_status($flag, $user->uid, $account->uid);
-
-    switch ($flag_status) {
-      case(FLAG_FRIEND_FLAGGED):
-        // Remove friend
-        return l(t('Remove friend'), "flag/confirm/unfriend/friend/$account->uid", array('query' => drupal_get_destination()));
-        break;
-
-      case(FLAG_FRIEND_APPROVAL):
-      case(FLAG_FRIEND_UNFLAGGED):
-        // Add friend
-        return l(t('Add friend'), "flag/confirm/flag/friend/$account->uid", array('query' => drupal_get_destination()));
-        break;
-
-      case(FLAG_FRIEND_PENDING):
-        // Pending friend
-        return l(t('Friend Requested. Cancel?'), "flag/confirm/unflag/friend/$account->uid", array('query' => drupal_get_destination()));
-        break;
-    }
-  }
-  return;
 }

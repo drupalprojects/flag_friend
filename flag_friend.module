@@ -19,10 +19,11 @@ define('FLAG_FRIEND_RELATIONSHIP', 4);
 //    are unflagged.
 // 2) Symmetric state to the FLAG_FRIEND_BREAKING. It is invalid state because 
 // a user in the process of breaking relationship always unflags another party,
-// not himself. 
+// not himself.
 define('FLAG_FRIEND_ERROR', 5);
 // New transitional state in the relationship breaking process.
 define('FLAG_FRIEND_BREAKING', 6);
+
 /**
  * 
  * Flag Friend own functions.
@@ -32,7 +33,7 @@ define('FLAG_FRIEND_BREAKING', 6);
 /**
  * Save relationship request message.
  */
-function flag_friend_save_message($fcid, $message) {
+function _flag_friend_save_message($fcid, $message) {
   db_query("INSERT INTO {flag_friend_message} VALUES(%d, '%s')", $fcid, $message);
 }
 
@@ -40,14 +41,13 @@ function flag_friend_save_message($fcid, $message) {
 /**
  * Retrieve our flag's message.
  */
-function flag_friend_get_message($fcid) {
+function _flag_friend_get_message($fcid) {
   $result = db_result(db_query("SELECT message FROM {flag_friend_message} WHERE fcid = %d", $fcid));
   return ($result) ? $result : FALSE;
 }
 
 /**
- * Retrieve a list of relationship terminating accounts where user is 
- * originating party.
+ * Retrieve a list of user account that are in relationship with provided user.
  *
  * @param $uid
  *   The user id.
@@ -58,11 +58,9 @@ function flag_friend_get_message($fcid) {
  * @return
  *   Array of user objects.
  */
-function flag_friend_get_terminating_accounts($uid, $fid, $reset = NULL) {
+function flag_friend_get_friends($uid, $fid, $reset = NULL) {
   static $rels = array();
   if (!isset($rels[$uid][$fid]) || $reset) {
-    $rels[$uid] = array();
-    $rels[$uid][$fid] = array();
     $result = db_query("SELECT friend_uid FROM {flag_friend} WHERE uid = %d AND fid = %d", $uid, $fid);
     while ($rel = db_fetch_object($result)) {
       $rels[$uid][$fid][$rel->friend_uid] = user_load(array('uid' => $rel->friend_uid));
@@ -72,8 +70,7 @@ function flag_friend_get_terminating_accounts($uid, $fid, $reset = NULL) {
 }
 
 /**
- * Retrieve a list of relationship originating accounts where user is 
- * terminating party.
+ * Retrieve the number of active relationships of the user.
  *
  * @param $uid
  *   The user id.
@@ -82,67 +79,59 @@ function flag_friend_get_terminating_accounts($uid, $fid, $reset = NULL) {
  * @param $reset
  *   Boolean trigger to reset the static cache.
  * @return
- *   Array of user objects.
+ *   Number of relationships.
  */
-function flag_friend_get_originating_accounts($uid, $fid, $reset = NULL) {
-  static $rels = array();
-  if (!isset($rels[$uid][$fid]) || $reset) {
-    $rels[$uid] = array();
-    $rels[$uid][$fid] = array();
-    $result = db_query("SELECT uid FROM {flag_friend} WHERE friend_uid = %d AND fid = %d", $uid, $fid);
-    while ($rel = db_fetch_object($result)) {
-      $rels[$uid][$fid][$rel->uid] = user_load(array('uid' => $rel->uid));
+function flag_friend_get_relationship_count($uid, $fid, $reset = NULL) {
+  static $rels_count = array();
+  if (!isset($rels_count[$uid][$fid]) || $reset) {
+    $rels_count[$uid][$fid] = (int) db_result(db_query("SELECT COUNT(1) FROM {flag_friend} WHERE uid = %d AND fid = %d", $uid, $fid));
+  }
+  return $rels_count[$uid][$fid];
+}
+
+/**
+ * Theme a string representing number of Flag Friend relationships for the 
+ * given user. 
+ * 
+ * @param $flag
+ *   flag object
+ * @param $account
+ *   user account whose relationships to count
+ * @return
+ *   String representing number of relationships
+ */
+function theme_flag_friend_relationship_count($flag, $account) {
+  $count = flag_friend_get_relationship_count($account->uid, $flag->fid);
+  return $count > 0 ? format_plural($count, '1 friend', '@count friends', array('@count' => $count)) : t('No friends'); 
+}
+
+/**
+ * Get list of Friend Flags.
+ * 
+ * @param $type
+ *   What type of results to return. Can be one of the following: "names", 
+ *   "titles". When not provided, the function returns objects.
+ * @return
+ *   Array of flag objects or flag properties (depending on $type) keyed by fid   
+ */
+function flag_friend_get_flags($type = NULL) {
+  $flags = flag_get_flags('user');
+  $result = array();
+  foreach ($flags as $fid => $flag) {
+    if ($flag->link_type == 'msg_confirm') {
+      switch ($type) {
+        case 'names':
+          $result[$fid] = $flag->name;
+          break;
+        case 'titles':
+          $result[$fid] = $flag->get_label('title');
+          break;
+        default:
+          $result[$fid] = $flag;
+      }
     }
   }
-  return $rels[$uid][$fid];
-}
-
-/**
- * Retrieve the number of active relationships where user is originating party.
- * 
- * Note that "originating party" in relationship isn't equal to 
- * "requesting party" - user could request a relationship and become 
- * "terminating party" in it. Example: son sends request to his mother to 
- * accept their relationship. Mother accepts, and son becomes 
- * "terminating party" in a "mother -> sun" 1 way relationship. 
- *
- * @param $uid
- *   The user id.
- * @param $fid
- *   The relationship (Flag) id.
- * @param $reset
- *   Boolean trigger to reset the static cache.
- * @return
- *   Number of relationships.
- */
-function flag_friend_get_originating_count($uid, $fid, $reset = NULL) {
-  static $rels_count = array();
-  if (!isset($rels_count[$uid][$fid]) || $reset) {
-    $rels_count[$uid] = array();
-    $rels_count[$uid][$fid] = db_result(db_query("SELECT COUNT(1) FROM {flag_friend} WHERE uid = %d AND fid = %d", $uid, $fid));
-  }
-  return $rels_count[$uid][$fid];
-}
-
-/**
- * Retrieve the number of active relationships where user is terminating party.
- *
- * @param $uid
- *   The user id.
- * @param $fid
- *   The relationship (Flag) id.
- * @param $reset
- *   Boolean trigger to reset the static cache.
- * @return
- *   Number of relationships.
- */
-function flag_friend_get_terminating_count($uid, $fid, $reset = NULL) {
-  static $rels_count = array();
-  if (!isset($rels_count[$uid][$fid]) || $reset) {
-    $rels_count[$uid] = array();
-    $rels_count[$uid][$fid] = db_result(db_query("SELECT COUNT(1) FROM {flag_friend} WHERE friend_uid = %d AND fid = %d", $uid, $fid));
-  }
-  return $rels_count[$uid][$fid];
+  return $result;
 }
 
 /**
@@ -156,7 +145,6 @@ function flag_friend_get_terminating_count($uid, $fid, $reset = NULL) {
  *   The account id of the other user.
  * @return
  *   A string describing the status of the relationship.
- * @todo: this could possibly go into hook_flag_access once available.
  */
 function flag_friend_relationship_status($flag, $uid1, $uid2, $reset = NULL) {
   static $status_cache = array();
@@ -211,14 +199,15 @@ function _flag_friend_default_link_options() {
   $options['request_short'] = 'Add friend';
   $options['request_long'] = 'Add [user] to your list of friends.';
   $options['request_question'] = 'Are you sure you want to add [user] to your list of friends?';
-  $options['request_msg'] = 'Hello [user], please let me add you to my friend list.';
-  $options['request_msg_title'] = 'Send [user] a message (optional)';
-  $options['request_msg_desc'] = 'Enter a message to send to this user.';
   $options['request_yes'] = 'Send';
   $options['request_no'] = 'Cancel';
   $options['request_success_message'] = 'Request sent successfully.';
   $options['request_failed_message'] = 'Request failed.';
-
+  // Message
+  $options['request_msg'] = 'Hello [user], please let me add you to my friend list.';
+  $options['request_msg_title'] = 'Send [user] a message (optional)';
+  $options['request_msg_desc'] = 'Enter a message to send to this user.';
+  
   // Cancel pending
   $options['cancel_short'] = 'Friend Requested. Cancel?';
   $options['cancel_long'] = 'Click here to cancel this request.';
@@ -228,7 +217,8 @@ function _flag_friend_default_link_options() {
   $options['cancel_success_message'] = 'Your friendship request to [user] was canceled.';
   $options['cancel_failed_message'] = 'Friendship request cancellation failed.';
   
-  // Approve. Default is same as request, but we let define different strings.
+  // Approve. Default is almost the same as request, but we let define 
+  // different strings.
   $options['approve_short'] = 'Approve';
   $options['approve_long'] = 'Add [user] to your list of friends.';
   $options['approve_question'] = 'Are you sure you want to add [user] to your list of friends?';
@@ -259,7 +249,7 @@ function _flag_friend_default_link_options() {
 }
 
 /**
- * Sort of public API to manage Flag Friend relationships. Handles both Flag
+ * Public API function to manage Flag Friend relationships. Handles both Flag
  * states and flag_friend table entries.
  * 
  * Using transactions because whole operation is not atomic and DB could end up
@@ -267,56 +257,59 @@ function _flag_friend_default_link_options() {
  * 
  * @param $op
  *  One of the following operations:
- *    "create" - creates relationship and runs Flag Friend triggers.
- *    "create_no_trigger" - same as create but skips Flag Friend triggers.
- *    "delete" - deletes relationship and runs Flag Friend triggers.
- *    "delete_no_trigger" - same as delete but skips Flag Friend triggers.
+ *    "create" - creates relationship
+ *    "create_no_trigger" - same as create but skips hook_flag_friend() 
+ *      invocation and Flag Friend trigger.
+ *    "delete" - deletes relationship
+ *    "delete_no_trigger" - same as delete but skips hook_flag_friend() 
+ *      invocation and Flag Friend trigger.
  *     
- * @param $account
- *  first user object
- * @param $content_id
- *  second user's id
- * @param $flag
- *  flag object
+ * @param $requestor
+ *  requestor user id
+ * @param $requestee
+ *  requestee user id
+ * @param $flagname
+ *  flag name
  * @return boolean
  *  TRUE on success, FALSE otherwise.
  */
-function flag_friend_relationship($op, $account, $content_id = NULL, $flag = NULL) {  
+function flag_friend_relationship($op, $requestor, $requestee, $flagname) {
+  global $flag_friend_no_action_required;  
+  $flag = flag_get_flag($flagname);
+  
   // Start transaction.
   _flag_friend_transaction('BEGIN');
   
   switch ($op) {
     case 'create':
-      $result = _flag_friend_flag_both('flag', $account, $content_id, $flag);
+      $result = _flag_friend_flag_both('flag', $requestor, $requestee, $flag);
       break;
     
     case 'create_no_trigger':
       // Run "create" operation with semaphore set, so our hook_flag()
       // doesn't stand on our way.
-      global $flag_friend_no_action_required;
       $flag_friend_no_action_required = TRUE;
-      $result = _flag_friend_flag_both('flag', $account, $content_id, $flag);
+      $result = _flag_friend_flag_both('flag', $requestor, $requestee, $flag);
       unset($flag_friend_no_action_required);
       // Manually create relationship in the DB because of the semaphore.
       if ($result) {
-        $result = _flag_friend_relationship_db('create', $account, $content_id, $flag);
+        $result = _flag_friend_relationship_db('create', $requestor, $requestee, $flag);
       }
       break;
       
     case 'delete':
-      $result = _flag_friend_flag_both('unflag', $account, $content_id, $flag);
+      $result = _flag_friend_flag_both('unflag', $requestor, $requestee, $flag);
       break;
       
     case 'delete_no_trigger':
       // Run "delete" operation with semaphore set, so our hook_flag()
       // doesn't stand on our way.
-      global $flag_friend_no_action_required;
       $flag_friend_no_action_required = TRUE;
-      $result = _flag_friend_flag_both('unflag', $account, $content_id, $flag);
+      $result = _flag_friend_flag_both('unflag', $requestor, $requestee, $flag);
       unset($flag_friend_no_action_required);
       // Manually create relationship in the DB because of the semaphore.
       if ($result) {
-        $result = _flag_friend_relationship_db('delete', $account, $content_id, $flag);
+        $result = _flag_friend_relationship_db('delete', $requestor, $requestee, $flag);
       }
   }
   
@@ -344,18 +337,19 @@ function _flag_friend_transaction($op) {
  * Run flag action for both users. Let our hook_flag() handle the relationship.
  * and catch "rollback" if our hook_flag() operation failed to complete.
  */
-function _flag_friend_flag_both($action, $account, $content_id, $flag) {
+function _flag_friend_flag_both($action, $uid1, $uid2, $flag) {
   global $flag_friend_rollback;
-  $status = flag_friend_relationship_status($flag, $account->uid, $content_id, TRUE);
+  $status = flag_friend_relationship_status($flag, $uid1, $uid2, TRUE);
   if (($status == FLAG_FRIEND_UNFLAGGED && $action == 'flag') ||
       ($status == FLAG_FRIEND_RELATIONSHIP && $action == 'unflag')) {
-    $result1 = $flag->flag($action, $content_id, $account);
+    $account1 = user_load(array('uid' => $uid1));    
+    $result1 = $flag->flag($action, $uid2, $account1);
     if (!$result1) {
       return FALSE;
     }
-    $content_account = user_load(array('uid' => $content_id));
-    // Don't forget to catch our global "rollback" flag.
-    if ($flag->flag($action, $account->uid, $content_account) && !isset($flag_friend_rollback)) {
+    $account2 = user_load(array('uid' => $uid2));
+    // Run backward flag action and catch global "rollback" flag.
+    if ($flag->flag($action, $uid1, $account2) && !isset($flag_friend_rollback)) {
       return TRUE;
     }
     else {
@@ -367,49 +361,35 @@ function _flag_friend_flag_both($action, $account, $content_id, $flag) {
 
 
 /**
- * Manage relationship DB entries. Other modules should use 
- * flag_friend_relationship() instead of this function. 
+ * Manage relationship DB entries.
  * 
- * Uni-directional relationships are not supported yet.
+ * In most cases you would want to use flag_friend_relationship() instead of 
+ * this function. 
  * 
- * TODO: Add support for relationship direction. For each uni-directional 
- * relationships store and delete single entry.
- * 
- * @param $op
- *  relationship operation
- * @param $account
- *  for uni-directional relationships, originating user's account.
- *  for bi-directional ones, just first user object.
- * @param $content_id
- *  for uni-directional relationships, terminating user's account id.
- *  for bi-directional ones, just second user's id.
- * @param $flag
- *  flag object.
- * @return boolean
- *  TRUE on success, FALSE otherwise.
  */
-function _flag_friend_relationship_db($op, $account, $content_id = NULL, $flag = NULL) {
+function _flag_friend_relationship_db($op, $uid1, $uid2 = NULL, $flag = NULL) {
   switch ($op) {
     case 'create':
-      $q1 = db_query("INSERT INTO {flag_friend} VALUES(%d, %d, %d, %d)", $account->uid, $content_id, $_SERVER['REQUEST_TIME'], $flag->fid);
-      $q2 = db_query("INSERT INTO {flag_friend} VALUES(%d, %d, %d, %d)", $content_id, $account->uid, $_SERVER['REQUEST_TIME'], $flag->fid);
-      return ($q1 !== FALSE && $q2 !== FALSE);
+      $query = "INSERT INTO {flag_friend} VALUES(%d, %d, %d, %d)";
+      $q1 = db_query($query, $uid1, $uid2, $_SERVER['REQUEST_TIME'], $flag->fid);
+      $q2 = db_query($query, $uid2, $uid1, $_SERVER['REQUEST_TIME'], $flag->fid);
+      return ($q1 !== FALSE && $q2 !== FALSE);    
       
-    // Delete 2 entries of single relationship between the users.
+    // Delete 1 or 2 entries of single relationship between the users.
     case 'delete':
-      $q = db_query('DELETE FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d AND fid = %d) OR (uid = %d AND friend_uid = %d AND fid = %d)', $account->uid, $content_id, $flag->fid, $content_id, $account->uid, $flag->fid);
+      $q = db_query('DELETE FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d AND fid = %d) OR (uid = %d AND friend_uid = %d AND fid = %d)', $uid1, $uid2, $flag->fid, $uid2, $uid1, $flag->fid);
       return ($q !== FALSE);
       
     // Delete all relationships of the user.
     case 'delete_user':
-      $q = db_query("DELETE FROM {flag_friend} WHERE uid = %d OR friend_uid = %d", $account->uid, $account->uid);
+      $q = db_query("DELETE FROM {flag_friend} WHERE uid = %d OR friend_uid = %d", $uid1, $uid1);
       return ($q !== FALSE);      
   }
 }
 
 /**
  * Helper function to return Flag Friend operation based on Flag action and
- * current relationship status. 
+ * current relationship status.
  */
 function _flag_friend_get_op($action, $status) {
   if ($action == 'flag' && $status == FLAG_FRIEND_UNFLAGGED) {
@@ -482,9 +462,9 @@ function _flag_friend_menu_access($link_type, $op, $flag_name, $content_id) {
     return FALSE;
   }
   // "deny" is simulated action to deny incoming request. Flag with deny
-  // action points to the requesting user and we unflag receiver on behalf 
+  // action points to the requesting user and we unflag requestee on behalf 
   // of requester.
-  // Thus we must check if the requester can "unflag" the receiver
+  // Thus we must check if the requester can "unflag" the requestee
   if ($op == 'deny') {
     $account = user_load(array('uid' => $content_id));
     $content_id = $GLOBALS['user']->uid;
@@ -511,8 +491,6 @@ function _flag_friend_menu_access($link_type, $op, $flag_name, $content_id) {
  * Using $flag_friend_no_action_required semaphore when flagging to not call
  * ourselves.
  * Using $flag_friend_rollback flag when non-atomic operation fails.
- * 
- * 
  */
 function flag_friend_flag($event, $flag, $content_id, $account, $fcid) {
   global $user, $flag_friend_no_action_required, $flag_friend_rollback;
@@ -532,9 +510,8 @@ function flag_friend_flag($event, $flag, $content_id, $account, $fcid) {
   if ($event == 'flag') {
     // If both are now flagged, record the relationship.
     if ($status == FLAG_FRIEND_BOTH) {
-      if (_flag_friend_relationship_db('create', $account, $content_id, $flag)) {
-        // Store parties for the token processing.
-        $friend->friend = $user;
+      // Create the relationship DB entry.
+      if (_flag_friend_relationship_db('create', $account->uid, $content_id, $flag)) {
         // fire trigger
         module_invoke_all('flag_friend', 'approve', $target_account, $account, $flag);
       }
@@ -546,7 +523,7 @@ function flag_friend_flag($event, $flag, $content_id, $account, $fcid) {
       // Save request message.
       if (isset($GLOBALS['flag_friend_request_message'])) {
         $message = $GLOBALS['flag_friend_request_message'];
-        flag_friend_save_message($fcid, $message);
+        _flag_friend_save_message($fcid, $message);
       }
       // fire trigger
       module_invoke_all('flag_friend', 'request', $target_account, $account, $flag);
@@ -562,7 +539,7 @@ function flag_friend_flag($event, $flag, $content_id, $account, $fcid) {
         $result = $flag->flag('unflag', $account->uid, $target_account);
         unset($flag_friend_no_action_required);
         // Then delete relationship.
-        if ($result && _flag_friend_relationship_db('delete', $account, $content_id, $flag)) {
+        if ($result && _flag_friend_relationship_db('delete', $account->uid, $content_id, $flag)) {
           module_invoke_all('flag_friend', 'remove', $target_account, $account, $flag);
         }
         else {
@@ -721,9 +698,12 @@ function flag_friend_form_flag_form_alter(&$form, &$form_state) {
 function flag_friend_theme() {
   return array(
     'flag_friend_confirm_form' => array(
-      'arguments' => array('form'),
+      'arguments' => array('form' => NULL),
       'file' => 'includes/flag_friend.forms.inc',
-    ),    
+    ),
+    'flag_friend_relationship_count' => array(
+      'arguments' => array('flag' => NULL, 'account' => NULL),
+    ),
   );
 }
 
@@ -732,7 +712,7 @@ function flag_friend_theme() {
  */
 function flag_friend_init() {
   // Include modules integrations.
-  // Integrations that are not ported or tested yet are commented below.
+  // Integrations that are not ported or not tested yet are commented below.
   $contrib = array('author_pane', 'token', 'trigger');
   // 'activity', 'popups',
   
@@ -756,14 +736,9 @@ function flag_friend_views_api() {
 
 /**
  * Implementation of hook_ctools_plugin_directory().
- * 
- * Temporary disabled: 
- * -- access plugin needs Flag selection and selection of which user is which 
- *    party ("originating" or "terminating") and checking function change.
- * -- content type plugin needs Flag selection and counting function change
  */
 function flag_friend_ctools_plugin_directory($module, $plugin) {
   if ($module == 'ctools') {
-    //return 'plugins/'. $plugin;
+    return 'plugins/'. $plugin;
   }
 }

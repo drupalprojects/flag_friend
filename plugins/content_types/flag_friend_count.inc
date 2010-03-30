@@ -3,7 +3,8 @@
 
 /**
  * @file
- * Panels content type that shows the number of friends of a given user.
+ * Panels content type that shows the number of flag friend relationships of a 
+ * given user.
  */
 
 /**
@@ -13,9 +14,10 @@ function flag_friend_flag_friend_count_ctools_content_types() {
   return array(
     'single' => TRUE,
     'title' => t('Flag Friend Count'),
-    'description' => t('Count of friends of a given user'),
+    'description' => t('Count of flag friend relationships of a given user'),
     'required context' => new ctools_context_required(t('User'), 'user'),
     'category' => t('Miscellaneous'),
+    'defaults' => array('flag' => ''),
   );
 }
 
@@ -33,8 +35,9 @@ function flag_friend_flag_friend_count_content_type_render($subtype, $conf, $pan
   // Make a new empty "block" which will be a Pane you can add to your Panel.
   $block = new stdClass();
   if ($account) {
-    $block->title = t("Number of friends");
-    $block->content = flag_friend_count_get_friend_number($account);
+    $block->title = t("Number of relationships");
+    $flag = flag_get_flag($conf['flag']);  
+    $block->content = theme('flag_friend_relationship_count', $flag, $account);
   }
   else {
     // If somehow the user context is empty, this is a fallback message but
@@ -46,10 +49,17 @@ function flag_friend_flag_friend_count_content_type_render($subtype, $conf, $pan
 
 
 /**
- * Empty form so we can have the default override title.
+ * Plugin edit form.
  */
 function flag_friend_flag_friend_count_content_type_edit_form(&$form, &$form_state) {
-  // Does nothing!
+  $conf = $form_state['conf'];
+  
+  $form['flag'] = array(
+    '#type' => 'select',
+    '#title' => t('Relationship flag'),
+    '#options' => flag_friend_get_flags('names'),
+    '#default_value' => $conf['flag'],
+  );
 }
 
 function flag_friend_flag_friend_count_content_type_edit_form_submit(&$form, &$form_state) {
@@ -68,12 +78,4 @@ function flag_friend_flag_friend_count_content_type_edit_form_submit(&$form, &$f
 
 function flag_friend_flag_friend_count_content_type_admin_title($subtype, $conf, $context) {
   return t('"@s" flag friend number of friends', array('@s' => $context->identifier));
-}
-
-/**
- * Get the number of friends for the panel.
- */
-function flag_friend_count_get_friend_number($account = NULL) {
-  $friend_count = flag_friend_get_friend_count($account->uid);
-  return t('!friend_count friends', array('!friend_count' => $friend_count));
 }
