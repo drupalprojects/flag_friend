@@ -486,7 +486,7 @@ function flag_friend_get_fcid($flag, $content_id, $account_uid) {
 function flag_friend_message_email($status, $flag, $recipient_uid, $sender) {
   $recipient = user_load(array('uid' => $recipient_uid));
   // if the user can receive notifications
-  if (user_access('receive friend email notification')) {
+  if (user_access('receive friend email notification', $recipient)) {
     // and they've expressed they want them
     if ((isset($recipient->friend_notification) && $recipient->friend_notification !== -1) || !isset($recipient->friend_notification)) {
       $email = theme('flag_friend_message_email', $status, $flag, $recipient, $sender);
