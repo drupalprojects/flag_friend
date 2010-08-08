@@ -229,6 +229,7 @@ function flag_friend_views_default_views() {
     'title' => 'Friends',
     'description' => '',
     'weight' => '0',
+    'name' => 'navigation',
   ));
   $handler = $view->new_display('page', 'Page (pending)', 'page_2');
   $handler->override_option('fields', array(
@@ -326,9 +327,9 @@ function flag_friend_views_default_views() {
       'validate_argument_user_flag_test' => 'flaggable',
       'validate_argument_user_flag_id_type' => 'id',
       'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-                                    return FALSE;
-                                  }
-                                  return TRUE;',
+                                      return FALSE;
+                                    }
+                                    return TRUE;',
     ),
   ));
   $handler->override_option('title', 'Friend Requests');
@@ -349,6 +350,7 @@ function flag_friend_views_default_views() {
     'title' => '',
     'description' => '',
     'weight' => 0,
+    'name' => 'navigation',
   ));
   $handler = $view->new_display('page', 'Page (flagged)', 'page_3');
   $handler->override_option('relationships', array(
@@ -436,7 +438,7 @@ function flag_friend_views_default_views() {
       'breadcrumb' => '',
       'default_argument_type' => 'user',
       'default_argument' => '',
-      'validate_type' => 'none',
+      'validate_type' => 'php',
       'validate_fail' => 'not found',
       'break_phrase' => 0,
       'not' => 0,
@@ -457,7 +459,6 @@ function flag_friend_views_default_views() {
       'default_argument_php' => '',
       'validate_argument_node_type' => array(
         'page' => 0,
-        'smackdown' => 0,
         'story' => 0,
       ),
       'validate_argument_node_access' => 0,
@@ -472,7 +473,10 @@ function flag_friend_views_default_views() {
       'validate_argument_user_flag_name' => '*relationship*',
       'validate_argument_user_flag_test' => 'flaggable',
       'validate_argument_user_flag_id_type' => 'id',
-      'validate_argument_php' => '',
+      'validate_argument_php' => 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
+    return FALSE;
+  }
+  return TRUE;',
     ),
   ));
   $handler->override_option('title', 'Awaiting Friend Approvals');
@@ -493,6 +497,7 @@ function flag_friend_views_default_views() {
     'title' => '',
     'description' => '',
     'weight' => 0,
+    'name' => 'navigation',
   ));
   $handler = $view->new_display('block', 'Current user\'s Friends block', 'block_1');
   $handler->override_option('relationships', array());
