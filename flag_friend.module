@@ -789,8 +789,8 @@ function flag_friend_token_list($type = 'all') {
 function flag_friend_token_values($type, $object = NULL, $options = array()) {
   if (($type == 'flag_friend') && !empty($object)) {
     $data = array();
-    $data['requestor'] = $object->friend->name;
-    $data['requestee'] = $object->name;
+    $data['requestor'] = theme('username', $object->friend->name);
+    $data['requestee'] = theme('username', $object->name);
     $data['requestor-uid'] = $object->friend->uid;
     $data['requestee-uid'] = $object->uid;
     $data['requestor-url'] = base_path().drupal_get_path_alias('user/'.$object->friend->uid);
