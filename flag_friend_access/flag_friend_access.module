@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_node_grants().
+ * Implements hook_node_grants().
  */
 function flag_friend_access_node_grants($account, $op) {
   // module only controls view operations
@@ -22,7 +22,7 @@ function flag_friend_access_node_grants($account, $op) {
 }
 
 /**
- * Implementation of hook_node_access_records().
+ * Implements hook_node_access_records().
  */
 function flag_friend_access_node_access_records($node) {
   if ($node->flag_friend_access) {
@@ -40,10 +40,10 @@ function flag_friend_access_node_access_records($node) {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
-  // add in a checkbox only if the 
+  // add in a checkbox only if the
   if (isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id) {
     // We have a node form alter in our stuff.
     $form['flag_friend_control'] = array(
@@ -81,36 +81,51 @@ function flag_friend_access_value($nid, $reset = FALSE) {
   }
 
   if (!isset($nodes[$nid])) {
-    // db_result will return either FALSE or the result from the query.
-    $nodes[$nid] = db_result(db_query('SELECT uid FROM {flag_friend_access} WHERE nid = %d', $nid));
+    $nodes[$nid] = db_query('SELECT uid FROM {flag_friend_access} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
   }
 
   return $nodes[$nid];
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_node_load().
  */
-function flag_friend_access_nodeapi(&$node, $op) {
-  switch ($op) {
-    case 'load':
-      $node->flag_friend_access = flag_friend_access_value($node->nid);
-      break;
-    case 'insert':
-      if ($node->flag_friend_access) {
-        db_query('INSERT INTO {flag_friend_access} (uid, nid) VALUES (%d, %d)', $node->uid, $node->nid);
-      }
-      break;
-    case 'update':
-      $existing_access = flag_friend_access_value($node->nid);
-      if (empty($node->flag_friend_access) && !empty($existing_access)) {
-        db_query("DELETE FROM {flag_friend_access} WHERE nid = %d", $node->nid);
-        node_access_acquire_grants($node);
-      }
-      elseif (!empty($node->flag_friend_access) && empty($existing_access)) {
-        db_query('INSERT INTO {flag_friend_access} (uid, nid) VALUES (%d, %d)', $node->uid, $node->nid);
-        node_access_acquire_grants($node);
-      }
-      break;
+function flag_friend_access_node_load($node, $types) {
+  $node->flag_friend_access = flag_friend_access_value($node->nid);
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function flag_friend_access_node_insert($node) {
+  if ($node->flag_friend_access) {
+    $id = db_insert('flag_friend_access')
+  ->fields(array(
+    'uid' => $node->uid,
+    'nid' => $node->nid,
+  ))
+  ->execute();
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function flag_friend_access_node_update($node) {
+  $existing_access = flag_friend_access_value($node->nid);
+  if (empty($node->flag_friend_access) && !empty($existing_access)) {
+    db_delete('flag_friend_access')
+  ->condition('nid', $node->nid)
+  ->execute();
+    node_access_acquire_grants($node);
+  }
+  elseif (!empty($node->flag_friend_access) && empty($existing_access)) {
+    $id = db_insert('flag_friend_access')
+  ->fields(array(
+    'uid' => $node->uid,
+    'nid' => $node->nid,
+  ))
+  ->execute();
+    node_access_acquire_grants($node);
   }
 }

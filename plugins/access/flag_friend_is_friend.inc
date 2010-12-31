@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement specially named hook_ctools_access().
+ * Implements hook_ctools_access().
  */
 function flag_friend_flag_friend_is_friend_ctools_access() {
   return array(
@@ -27,13 +27,12 @@ function flag_friend_flag_friend_is_friend_ctools_access() {
 }
 
 /**
- * Settings form for the 'by perm' access plugin
+ * Settings form for the 'by perm' access plugin.
  */
-
 function flag_friend_flag_friend_is_friend_settings(&$form, &$form_state, $conf) {
   $form['settings']['helptext'] = array(
     '#type' => 'markup',
-    '#value' => '<div>'. t('Grant access based on flag_friend status between the two user contexts.') .'<br \>'. t('Note that this will NOT grant access if both users are the same.') . '</div>',
+    '#value' => '<div>' . t('Grant access based on flag_friend status between the two user contexts.') . '<br \>' . t('Note that this will NOT grant access if both users are the same.') . '</div>',
   );
   $form['settings']['is_friend'] = array(
     '#type' => 'radios',

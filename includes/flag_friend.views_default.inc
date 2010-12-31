@@ -9,7 +9,7 @@
  */
 
 /**
- * Implementation of hook_views_default_views().
+ * Implements hook_views_default_views().
  */
 function flag_friend_views_default_views() {
   $view = new view;

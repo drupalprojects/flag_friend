@@ -1,5 +1,5 @@
 <?php
-//$ Id: $
+// $Id$
 /**
  * @file
  * provides Views implementation for the apachesolr Views project
@@ -7,7 +7,7 @@
  */
 class flag_friend_handler_argument_apachesolr_friend extends apachesolr_views_handler_argument {
   function query() {
-     if (!empty($this->options['break_phrase'])) {
+    if (!empty($this->options['break_phrase'])) {
       $this->value = explode(',', $this->argument);
     }
     else {
@@ -19,8 +19,7 @@ class flag_friend_handler_argument_apachesolr_friend extends apachesolr_views_ha
         $filter_string .= " OR $friend_id";
       }
     }
-    $filter_string = substr($filter_string, 4);
+    $filter_string = drupal_substr($filter_string, 4);
     $this->query->add_filter($this->real_field, "($filter_string)");
   }
 }
-?>

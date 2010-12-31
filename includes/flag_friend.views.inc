@@ -8,12 +8,12 @@
  */
 
 /**
- * Implementation of hook_views_handlers().
+ * Implements hook_views_handlers().
  */
 function flag_friend_views_handlers() {
   return array(
     'info' => array(
-      'path' => drupal_get_path('module', 'flag_friend') .'/includes',
+      'path' => drupal_get_path('module', 'flag_friend') . '/includes',
     ),
     'handlers' => array(
       'flag_friend_handler_argument_numeric' => array(
@@ -30,11 +30,11 @@ function flag_friend_views_handlers() {
 }
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function flag_friend_views_data() {
   $data = array();
-  
+
   // flag_friend table
   $data['flag_friend']['table']['group'] = t('Flag friend');
   $data['flag_friend']['table']['join'] = array(
@@ -43,17 +43,17 @@ function flag_friend_views_data() {
       'field' => 'uid',
     ),
   );
-  
+
   $data['flag_friend']['uid'] = array(
     'group' => t('Flag friend'),
     'title' => t('Flag friend links'),
     'help' => t('Remove/Deny links'),
-    'real field' => 'uid', 
+    'real field' => 'uid',
     'field' => array(
       'handler' => 'flag_friend_handler_field_links',
     ),
   );
-  
+
   // argument
   $data['flag_friend']['friend_uid'] = array(
     'title' => t('Friends of'),
@@ -62,7 +62,7 @@ function flag_friend_views_data() {
       'handler' => 'flag_friend_handler_argument_numeric',
     ),
   );
-  
+
   // field, sort, filter, argument
   $data['flag_friend']['created'] = array(
     'title' => t('Relationship created time'),
@@ -81,7 +81,7 @@ function flag_friend_views_data() {
       'handler' => 'views_handler_argument_date',
     ),
   );
-  
+
   // flag_friend_message table
   $data['flag_friend_message']['table']['group'] = t('Flag friend');
   $data['flag_friend_message']['table']['join'] = array(
@@ -90,7 +90,7 @@ function flag_friend_views_data() {
       'field' => 'fcid',
     ),
   );
-  
+
   // field
   $data['flag_friend_message']['message'] = array(
     'title' => t('Message'),
@@ -100,9 +100,9 @@ function flag_friend_views_data() {
       'click sortable' => FALSE,
     ),
   );
-  
+
   // Add the flag relationship.
-  // This basically just changes the 'base field' while reusing Flag's 
+  // This basically just changes the 'base field' while reusing Flag's
   // relationship handler. In effect, we can display the user who flagged
   // the content we specify, instead of the user who is flagged.
   $data['users']['flag_friend_content_rel'] = array(
@@ -118,12 +118,12 @@ function flag_friend_views_data() {
       'relationship field' => 'uid',
     ),
   );
-  
+
   return $data;
 }
 
 /**
- * Implementation of hook_views_data_alter().
+ * Implements hook_views_data_alter().
  */
 function flag_friend_views_data_alter(&$data) {
   if (module_exists('apachesolr_views')) {

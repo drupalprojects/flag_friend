@@ -30,7 +30,7 @@ function flag_friend_flag_friend_links_content_type_render($subtype, $conf, $pan
   // $context in this case is a user context, so we can get the user object
   // from it and put it into $account.
 
-  $account = isset($context->data) ? drupal_clone($context->data) : NULL;
+  $account = isset($context->data) ? clone $context->data : NULL;
   // Make a new empty "block" which will be a Pane you can add to your Panel.
   $block = new stdClass();
   if ($account) {
@@ -84,18 +84,18 @@ function flag_friend_links_get_link_values($account = NULL) {
     $flag_status = flag_friend_determine_friend_status($flag, $user->uid, $account->uid);
 
     switch ($flag_status) {
-      case(FLAG_FRIEND_FLAGGED):
+      case (FLAG_FRIEND_FLAGGED):
         // Remove friend
         return l(t('Remove friend'), "flag/confirm/unfriend/friend/$account->uid", array('query' => drupal_get_destination()));
         break;
 
-      case(FLAG_FRIEND_APPROVAL):
-      case(FLAG_FRIEND_UNFLAGGED):
+      case (FLAG_FRIEND_APPROVAL):
+      case (FLAG_FRIEND_UNFLAGGED):
         // Add friend
         return l(t('Add friend'), "flag/confirm/flag/friend/$account->uid", array('query' => drupal_get_destination()));
         break;
 
-      case(FLAG_FRIEND_PENDING):
+      case (FLAG_FRIEND_PENDING):
         // Pending friend
         return l(t('Friend Requested. Cancel?'), "flag/confirm/unflag/friend/$account->uid", array('query' => drupal_get_destination()));
         break;
