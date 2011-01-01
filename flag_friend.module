@@ -112,7 +112,7 @@ function flag_friend_permission() {
  */
 function flag_friend_views_api() {
   return array(
-    'api' => 2.0,
+    'api' => 3,
     'path' => drupal_get_path('module', 'flag_friend') . '/includes',
   );
 }
@@ -300,7 +300,17 @@ function flag_friend_determine_friend_status($flag, $uid1, $uid2, $reset = NULL)
     if (!isset($status_cache[$key1][$key2])) {
       $you_are_flagged = $flag->is_flagged($uid1, $uid2);
       $they_are_flagged = $flag->is_flagged($uid2, $uid1);
-      $friends = db_query("SELECT * FROM {flag_friend} WHERE (uid = :(uid AND friend_uid = :friend_uid) OR (uid = :(uid AND friend_uid = :friend_uid)", array(':(uid' => $uid1, ':friend_uid' => $uid2, ':(uid' => $uid2, ':friend_uid' => $uid1))->fetchField();
+      $friends = db_select('flag_friend', 'ff')
+        ->fields('ff')
+        ->condition(db_or()
+          ->condition('uid', $uid1)
+          ->condition('friend_uid', $uid2)
+        )
+        ->condition(db_or()
+          ->condition('uid', $uid2)
+          ->condition('friend_uid', $uid1)
+        )
+        ->execute()->fetchField();
       // see if these users have flagged eachother
       if ($you_are_flagged && $they_are_flagged) {
         $status_cache[$key1][$key2] = FLAG_FRIEND_BOTH;
@@ -467,9 +477,15 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
   elseif ($event == 'unfriend') {
     // remove the friend relationship
     db_delete('flag_friend')
-      ->where('(uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)',  )
-      ->execute();
-
+      ->condition(db_or()
+        ->condition('uid', $user->uid)
+        ->condition('friend_uid', $content_id)
+      )
+      ->condition(db_or()
+        ->condition('uid', $content_id)
+        ->condition('friend_uid', $user->uid)
+      )
+    ->execute();
     // Denial - the content_id is actually the account param in this case
     $account = user_load($content_id);
 
@@ -658,23 +674,34 @@ function flag_friend_theme() {
  */
 function flag_friend_flag_default_flags() {
   $flags = array();
-  $flags[] = array(
+  // Exported flag: "Friend".
+  $flags[] = array (
     'content_type' => 'user',
     'name' => 'friend',
     'title' => 'Friend',
-    'roles' => array(
-      0 => '2',
-    ),
-    'global' => FALSE,
+    'global' => '0',
+    'types' => array(),
     'flag_short' => 'Add friend',
     'flag_long' => 'Add this user to your list of friends.',
-    'flag_confirmation' => 'Are you sure you want to add [user] to your list of friends?',
+    'flag_message' => '',
     'unflag_short' => 'Remove friend',
     'unflag_long' => 'Remove this user from your list of friends.',
-    'unflag_confirmation' => 'Are you sure you want to remove [user] from your list of friends?',
-    'status' => FALSE,
+    'unflag_message' => '',
+    'unflag_denied_text' => '',
     'link_type' => 'confirm',
-    'locked' => array('name', 'global', 'link_type'),
+    'roles' => array(
+      'flag' => array(
+        0 => '2',
+      ),
+      'unflag' => array(
+        0 => '2',
+      ),
+    ),
+    'show_on_profile' => 1,
+    'access_uid' => 'others',
+    'flag_confirmation' => 'Are you sure you want to add [user:name] to your list of friends?',
+    'unflag_confirmation' => 'Are you sure you want to remove [user:name] from your list of friends?',
+    'api_version' => 2,
   );
   return $flags;
 }
