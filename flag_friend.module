@@ -1,5 +1,4 @@
 <?php
-//$Id$
 
 // define our statuses
 define('FLAG_FRIEND_BOTH', 0);

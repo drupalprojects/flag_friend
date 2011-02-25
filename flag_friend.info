@@ -1,4 +1,3 @@
-; $Id$
 name = Flag friend
 description = Flag users as friends. Implements it's own flag and a form for sending a user a message upon flag.
 dependencies = flag
