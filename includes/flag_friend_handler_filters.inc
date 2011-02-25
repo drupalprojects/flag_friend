@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Filter handler allowing to filter by flags (Flag Friend relationship types).

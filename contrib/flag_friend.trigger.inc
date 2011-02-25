@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file: Trigger module integration for the Flag Friend.

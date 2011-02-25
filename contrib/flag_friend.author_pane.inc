@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file: Author Pane 2.x module integration for the Flag Friend.

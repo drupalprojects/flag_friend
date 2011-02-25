@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file flag_friend_handler_argument_numeric.inc

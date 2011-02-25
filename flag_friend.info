@@ -1,4 +1,3 @@
-; $Id$
 name = Flag friend
 description = Use Flag to set up arbitrary user relationships that require confirmations from both parties.
 dependencies[] = flag

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file: Popups module integration for the Flag Friend.

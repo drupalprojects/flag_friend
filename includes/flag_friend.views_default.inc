@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file flag_friend.views_default.inc
