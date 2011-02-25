@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file: provides access control for nodes. Allow only the users friends to

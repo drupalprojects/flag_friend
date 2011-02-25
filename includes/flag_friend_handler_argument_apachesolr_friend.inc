@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * provides Views implementation for the apachesolr Views project
