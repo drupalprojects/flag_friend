@@ -622,23 +622,47 @@ function flag_friend_theme() {
  */
 function flag_friend_flag_default_flags() {
   $flags = array();
-  $flags[] = array(
+  // Exported flag: "Friend".
+  $flags[] = array (
     'content_type' => 'user',
     'name' => 'friend',
     'title' => 'Friend',
-    'roles' => array(
-      0 => '2',
+    'global' => false,
+    'types' => 
+    array (
     ),
-    'global' => FALSE,
     'flag_short' => 'Add friend',
     'flag_long' => 'Add this user to your list of friends.',
-    'flag_confirmation' => 'Are you sure you want to add [user] to your list of friends?',
+    'flag_message' => '',
     'unflag_short' => 'Remove friend',
     'unflag_long' => 'Remove this user from your list of friends.',
-    'unflag_confirmation' => 'Are you sure you want to remove [user] from your list of friends?',
-    'status' => FALSE,
+    'unflag_message' => '',
+    'unflag_denied_text' => '',
     'link_type' => 'confirm',
-    'locked' => array('name', 'global', 'link_type'),
+    'roles' => 
+    array (
+      'flag' => 
+      array (
+        0 => '2',
+      ),
+      'unflag' => 
+      array (
+        0 => '2',
+      ),
+    ),
+    'show_on_profile' => true,
+    'access_uid' => '',
+    'flag_confirmation' => 'Are you sure you want to add [user] to your list of friends?',
+    'unflag_confirmation' => 'Are you sure you want to remove [user] from your list of friends?',
+    'status' => false,
+    'locked' => 
+    array (
+      'name' => 'name',
+      'global' => 'global',
+      'link_type' => 'link_type',
+    ),
+    'module' => 'flag_friend',
+    'api_version' => 2,
   );
   return $flags;
 }
