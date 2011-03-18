@@ -136,9 +136,10 @@ function flag_friend_get_flags($flag, $content_id, $reset = NULL) {
   if (!isset($flagged_content[$uid][$content_type][$content_id]) || $reset) {
     $flags = flag_get_flags($flag->content_type);
     $flagged_content[$uid][$content_type][$content_id] = array();
+
     // get flags with messages
-    $result = db_query("SELECT fc.*, ffm.message FROM {flag_content} fc LEFT JOIN {flag_friend_message} ffm ON ffm.fcid = fc.fcid WHERE fc.fid = :fc.fid AND fc.content_type = :fc.content_type AND fc.content_id = :fc.content_id", array(':fc.fid' => $flag->fid, ':fc.content_type' => $content_type, ':fc.content_id' => $content_id));
-    while ($new_flag = db_fetch_object($result)) {
+    $results = db_query("SELECT fc.*, ffm.message FROM {flag_content} fc LEFT JOIN {flag_friend_message} ffm ON ffm.fcid = fc.fcid WHERE fc.fid = :fc.fid AND fc.content_type = :fc.content_type AND fc.content_id = :fc.content_id", array(':fc.fid' => $flag->fid, ':fc.content_type' => $content_type, ':fc.content_id' => $content_id))->fetchAll();    
+    foreach ($result as $new_flag) {
       $fcid = flag_friend_get_fcid($flag, $content_id, $new_flag->uid);
       $flagged_content[$uid][$content_type][$content_id][$fcid] = $new_flag;
       $flagged_content[$uid][$content_type][$content_id][$fcid]->user = user_load($new_flag->uid);
@@ -163,8 +164,8 @@ function flag_friend_get_friends($uid, $reset = NULL) {
 
   if (!isset($friends[$uid]) || $reset) {
     $friends[$uid] = array();
-    $result = db_query("SELECT * FROM {flag_friend} WHERE uid = :uid OR friend_uid = :uid", array(':uid' => $uid, ':friend_uid' => $uid));
-    while ($friend = db_fetch_object($result)) {
+    $results = db_query("SELECT * FROM {flag_friend} WHERE uid = :uid OR friend_uid = :friend_uid", array(':uid' => $uid, ':friend_uid' => $uid))->fetchAll();
+    foreach ($results as $friend) {
       // if the current user is in the uid column
       if ($friend->uid == $uid) {
         // load the friend_uid
