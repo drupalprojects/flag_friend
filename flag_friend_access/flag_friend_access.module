@@ -24,7 +24,7 @@ function flag_friend_access_node_grants($account, $op) {
  * Implements hook_node_access_records().
  */
 function flag_friend_access_node_access_records($node) {
-  if ($node->flag_friend_access) {
+  if (property_exists($node, 'flag_friend_access')) {
     return array(
       array(
         'realm' => 'flag_friend',
@@ -99,7 +99,7 @@ function flag_friend_access_node_load($nodes, $types) {
  * Implements hook_node_insert().
  */
 function flag_friend_access_node_insert($node) {
-  if ($node->flag_friend_access) {
+  if (property_exists($node, 'flag_friend_access')) {
     $id = db_insert('flag_friend_access')
   ->fields(array(
     'uid' => $node->uid,
