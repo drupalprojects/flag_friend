@@ -640,7 +640,7 @@ function flag_friend_get_message($fcid) {
  * Theme function for the message form.
  */
 function theme_flag_friend_message_form($variables) {
-  $form = $variables['0'];
+  $form = $variables['form'];
   return drupal_render_children($form);
 }
 
@@ -648,7 +648,7 @@ function theme_flag_friend_message_form($variables) {
  * Theme function for the unfriending action.
  */
 function theme_flag_friend_unfriend_form($variables) {
-  $form = $variables['0'];
+  $form = $variables['form'];
   return drupal_render_children($form);
 }
 
@@ -661,10 +661,10 @@ function flag_friend_theme() {
       'variables' => array('status', 'flag', 'recipient', 'sender'),
     ),
      'flag_friend_message_form' => array(
-      'variables' => array('form'),
+      'variables' => array('form' => array()),
     ),
      'flag_friend_unfriend_form' => array(
-      'variables' => array('form'),
+      'variables' => array('form' => array()),
     ),
   );
 }
