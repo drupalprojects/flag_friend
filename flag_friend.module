@@ -43,11 +43,11 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
         $flag->flag('unflag', $account->uid, $friend_account);
 
         // fire trigger
-        module_invoke_all('flag_friend', 'approve', $friend_account, $account);
+        module_invoke_all('flag_friend', 'approve', $friend_account, $account, $flag);
       }
       else {
         // fire trigger
-        module_invoke_all('flag_friend', 'request', $friend_account, $account);
+        module_invoke_all('flag_friend', 'request', $friend_account, $account, $flag);
       }
     }
   }
@@ -467,7 +467,7 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
       $content_id = $user->uid;
 
       // Fire trigger
-      module_invoke_all('flag_friend', 'deny', $user, $account);
+      module_invoke_all('flag_friend', 'deny', $user, $account, $flag);
     }
     // remove any messages
     flag_friend_message($event, $flag, $content_id, $account->uid);
@@ -490,7 +490,7 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
     $account = user_load($content_id);
 
     // Fire trigger
-    module_invoke_all('flag_friend', 'remove', $account, $user);
+    module_invoke_all('flag_friend', 'remove', $account, $user, $flag);
   }
 }
 
