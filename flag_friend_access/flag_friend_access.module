@@ -89,8 +89,10 @@ function flag_friend_access_value($nid, $reset = FALSE) {
 /**
  * Implements hook_node_load().
  */
-function flag_friend_access_node_load($node, $types) {
-  $node->flag_friend_access = flag_friend_access_value($node->nid);
+function flag_friend_access_node_load($nodes, $types) {
+  foreach ($nodes as $node) {
+    $node->flag_friend_access = flag_friend_access_value($node->nid);
+  }
 }
 
 /**
