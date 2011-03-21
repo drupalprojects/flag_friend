@@ -232,11 +232,6 @@ function flag_friend_user_cancel($edit, $account, $method) {
 }
 
 /**
- * Implements hook_user().
- */
-function flag_friend_user_OLD($op, &$edit, &$account, $category = NULL) { }
-
-/**
  * Implements hook_user_view().
  */
 function flag_friend_user_view($account, $view_mode) {
