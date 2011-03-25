@@ -374,10 +374,11 @@ function flag_friend_message_form($action, $flag, $content_id, $token) {
     '#cols' => 60,
     '#rows' => 5,
   );
+  $cancel = array_key_exists('destination', $_GET) ? $_GET['destination'] : 'user/' . $content_id;
   $form['flag_friend_submit'] = array(
     '#type' => 'submit',
     '#value' => t('Send'),
-    '#suffix' => l(t('Cancel'), $_GET['destination']),
+    '#suffix' => l(t('Cancel'), $cancel),
   );
   $form['#theme'] = 'flag_friend_message_form';
   return $form;
