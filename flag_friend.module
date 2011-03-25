@@ -295,8 +295,9 @@ function flag_friend_determine_friend_status($flag, $uid1, $uid2, $reset = NULL)
     if (!isset($status_cache[$key1][$key2])) {
       $you_are_flagged = $flag->is_flagged($uid1, $uid2);
       $they_are_flagged = $flag->is_flagged($uid2, $uid1);
+
       $friends = db_select('flag_friend', 'ff')
-        ->fields('ff')
+        ->fields('ff', array('created'))
         ->condition(db_or()
           ->condition(db_and()
             ->condition('uid', $uid1)
@@ -308,6 +309,7 @@ function flag_friend_determine_friend_status($flag, $uid1, $uid2, $reset = NULL)
           )
         )
         ->execute()->fetchField();
+
       // see if these users have flagged eachother
       if ($you_are_flagged && $they_are_flagged) {
         $status_cache[$key1][$key2] = FLAG_FRIEND_BOTH;
@@ -438,6 +440,8 @@ function flag_friend_form_submit($form, &$form_state) {
     // Clean message when user cancel own request.
     flag_friend_message($action, $flag, $content_id, $user->uid);
   }
+  //flag.module doesn't understand 'unfriend'
+  $form_state['values']['action'] = 'unflag';
 }
 
 /**
@@ -475,14 +479,17 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
     // remove the friend relationship
     db_delete('flag_friend')
       ->condition(db_or()
-        ->condition('uid', $user->uid)
-        ->condition('friend_uid', $content_id)
-      )
-      ->condition(db_or()
-        ->condition('uid', $content_id)
-        ->condition('friend_uid', $user->uid)
+        ->condition(db_and()
+          ->condition('uid', $user->uid)
+          ->condition('friend_uid', $content_id)
+        )
+        ->condition(db_and()
+          ->condition('uid', $content_id)
+          ->condition('friend_uid', $user->uid)
+        )
       )
     ->execute();
+    
     // Denial - the content_id is actually the account param in this case
     $account = user_load($content_id);
 

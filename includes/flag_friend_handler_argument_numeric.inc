@@ -31,22 +31,38 @@ class flag_friend_handler_argument_numeric extends views_handler_argument_numeri
       views_break_phrase($this->argument, $this);
     }
     else {
-      $this->value = array($this->argument);
+      $this->value = array((int) $this->argument);
     }
-    $group = $this->query->set_where_group('OR', 'friends');
+
+    //Determine operator
+    $operator = empty($this->options['not']) ? 'IN' : 'NOT IN';
+
+    //Detect  if $value is array or not
+    if (is_array($this->value)) {
+      $value = $this->value;
+    } else {
+      $value = array($this->argument);
+    }
+
+    //Build array of all friends
+    $all_friends = array();
+    $all_friends += db_select('flag_friend', 'f')->fields('f', array('friend_uid'))->condition('uid', $value, $operator)->execute()->fetchCol();
+    $all_friends += db_select('flag_friend', 'f')->fields('f', array('uid'))->condition('friend_uid', $value, $operator)->execute()->fetchCol();
+
+    //Include argument if option is set.
     if ($this->options['flag_friend_include_arg_user']) {
-      $this->query->add_where($group, "users.uid = %d", $this->argument);
+      $all_friends[] = (int) $this->argument;
     }
-    if (count($this->value) > 1) {
-      $operator = empty($this->options['not']) ? 'IN' : 'NOT IN';
-      $placeholders = implode(', ', array_fill(0, sizeof($this->value), $this->value));
-      $this->query->add_where_expression($group, "users.uid IN (SELECT f.friend_uid FROM {flag_friend} f WHERE f.uid $operator ($placeholders))");
-      $this->query->add_where_expression($group, "users.uid IN (SELECT f.uid FROM {flag_friend} f WHERE f.friend_uid $operator ($placeholders))");
+
+    //If no friends, pass something or SQL borks
+    if (count($all_friends) === 0){
+      $all_friends = array(0);
     }
-    else {
-      $operator = empty($this->options['not']) ? '=' : '!=';
-      $this->query->add_where_expression($group, "users.uid IN (SELECT f.friend_uid FROM {flag_friend} f WHERE f.uid $operator $this->argument)");
-      $this->query->add_where_expression($group, "users.uid IN (SELECT f.uid FROM {flag_friend} f WHERE f.friend_uid $operator $this->argument)");
-    }
+
+    //Determine field
+    $field = 'users';
+    $field .= $this->view->base_table != 'users'? '_' .$this->view->base_table: '';
+
+    $this->query->add_where(0, $field . ".uid", $all_friends);
   }
 }
