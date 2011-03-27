@@ -406,8 +406,8 @@ function flag_friend_unfriend_form($action, $flag, $content_id, $token) {
       $question = $flag->get_label('unflag_confirmation', $content_id);
       break;
   }
-  $path = $_GET['destination'];
-  $form = confirm_form($form, $question, $path);
+  $cancel = array_key_exists('destination', $_GET) ? $_GET['destination'] : 'user/' . $content_id;
+  $form = confirm_form($form, $question, $cancel);
   $form['#theme'] = 'flag_friend_unfriend_form';
   return $form;
 }
