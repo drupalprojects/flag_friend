@@ -235,10 +235,16 @@ function flag_friend_user_cancel($edit, $account, $method) {
  * Implements hook_user_view().
  */
 function flag_friend_user_view($account, $view_mode) {
-  if ($account->uid == $GLOBALS['user']->uid) {
-    $flag = flag_get_flag('friend');
-    if (!empty($flag) && isset($account->content['flags'][$flag->name])) {
+  $flag = flag_get_flag('friend');
+  if (!empty($flag) && isset($account->content['flags'][$flag->name])) {
+    if ($account->uid == $GLOBALS['user']->uid) {
       $account->content['flags'][$flag->name]['#access'] = FALSE;
+    }
+    else {
+      $status = flag_friend_determine_friend_status($flag, $GLOBALS['user']->uid, $account->uid);
+      if ($status == FLAG_FRIEND_APPROVAL) {
+        $account->content['flags'][$flag->name]['#markup'] .= flag_friend_create_link('unflag', $account->uid);
+      }
     }
   }
 }

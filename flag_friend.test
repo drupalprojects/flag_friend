@@ -36,7 +36,7 @@ class FlagFriendUserTestCase extends DrupalWebTestCase {
     $this->drupalLogin($this->admin_user);
     $edit = array(
       'roles[flag][2]' => TRUE,
-      'roles[unflag][2]' => TRUE,      
+      'roles[unflag][2]' => TRUE,
     );
     $this->drupalPost('admin/structure/flags/manage/friend', $edit, t('Submit'));
   }
@@ -101,12 +101,14 @@ class FlagFriendUserTestCase extends DrupalWebTestCase {
     // User C should have requested a friendship with User B.
     $this->drupalGet('user/' . $this->user_c->uid);
     $this->assertText(t('Approve'));
+    $this->assertText(t('Deny'));
 
     // Log in as User C.
     $this->drupalLogin($this->user_c);
     // User A should have requested a friendship with User C.
     $this->drupalGet('user/' . $this->user_a->uid);
     $this->assertText(t('Approve'));
+    $this->assertText(t('Deny'));
     // User B should have should have been sent a friend request from User C.
     $this->drupalGet('user/' . $this->user_b->uid);
     $this->assertText(t('Friend Requested. Cancel?'));
