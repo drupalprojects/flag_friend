@@ -50,7 +50,7 @@ function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('Friend Access Control'),
       '#collapsable' => FALSE,
     );
-    $access_value = flag_friend_access_value($form['#node']->nid);
+    $access_value = isset($form['#node']->nid) ? flag_friend_access_value($form['#node']->nid) : FALSE;
     $form['flag_friend_control']['flag_friend_access'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only My Friends'),
