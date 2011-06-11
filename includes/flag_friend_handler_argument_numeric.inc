@@ -46,8 +46,11 @@ class flag_friend_handler_argument_numeric extends views_handler_argument_numeri
 
     //Build array of all friends
     $all_friends = array();
+    $all_friends_of = array();
     $all_friends += db_select('flag_friend', 'f')->fields('f', array('friend_uid'))->condition('uid', $value, $operator)->execute()->fetchCol();
-    $all_friends += db_select('flag_friend', 'f')->fields('f', array('uid'))->condition('friend_uid', $value, $operator)->execute()->fetchCol();
+    $all_friends_of += db_select('flag_friend', 'f')->fields('f', array('uid'))->condition('friend_uid', $value, $operator)->execute()->fetchCol();
+
+    $all_friends = array_merge($all_friends, $all_friends_of);
 
     //Include argument if option is set.
     if ($this->options['flag_friend_include_arg_user']) {
