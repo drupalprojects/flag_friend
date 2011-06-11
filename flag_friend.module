@@ -117,6 +117,16 @@ function flag_friend_views_api() {
 }
 
 /**
+ * Implements hook_form_alter().
+ */
+function flag_friend_form_flag_form_alter(&$form, &$form_state, $form_id) {
+  if ($form['#flag']->name == 'friend') {
+    // Disable the machine name field for the 'friend' flag.
+    $form['name']['#disabled'] = TRUE;
+  }
+}
+
+/**
  * Retrieve pending friend flags.
  *
  * @param $flag
