@@ -22,7 +22,7 @@ function flag_friend_flag_friend_links_ctools_content_types() {
 /**
  * Render the unread messages content type.
  */
-function flag_friend_flag_friend_links_content_type_render($subtype, $conf, $panel_args, $context) {
+function flag_friend_flag_friend_links_content_type_render($subtype, $conf, $args, $context) {
   if (!empty($context) && empty($context->data)) {
     return;
   }
@@ -31,6 +31,7 @@ function flag_friend_flag_friend_links_content_type_render($subtype, $conf, $pan
 
   $account = isset($context->data) ? clone $context->data : NULL;
   // Make a new empty "block" which will be a Pane you can add to your Panel.
+
   $block = new stdClass();
   if ($account) {
     $block->title = t("Flag friend links");
@@ -48,8 +49,13 @@ function flag_friend_flag_friend_links_content_type_render($subtype, $conf, $pan
 /**
  * Empty form so we can have the default override title.
  */
-function flag_friend_flag_friend_links_content_type_edit_form(&$form, &$form_state) {
-  // Does nothing!
+function flag_friend_flag_friend_links_content_type_edit_form($form, &$form_state) {
+  $settings = ctools_custom_content_type_get_conf($form_state['subtype'], $form_state['conf']);
+  $form_state['settings'] = $settings;
+
+  if ($settings['custom_type'] == 'fixed') {
+    return $form; // no form for this case.
+  }
 }
 
 function flag_friend_flag_friend_links_content_type_edit_form_submit(&$form, &$form_state) {
