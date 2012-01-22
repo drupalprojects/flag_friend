@@ -24,7 +24,7 @@ function flag_friend_access_node_grants($account, $op) {
  * Implements hook_node_access_records().
  */
 function flag_friend_access_node_access_records($node) {
-  if (property_exists($node, 'flag_friend_access')) {
+  if (!empty($node->flag_friend_access)) {
     return array(
       array(
         'realm' => 'flag_friend',
