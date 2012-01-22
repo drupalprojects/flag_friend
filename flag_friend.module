@@ -560,7 +560,7 @@ function flag_friend_message_email($status, $flag, $recipient_uid, $sender) {
   // if the user can receive notifications
   if (user_access('receive friend email notification', $recipient)) {
     // and they've expressed they want them
-    if ((isset($recipient->friend_notification) && $recipient->friend_notification !== -1) || !isset($recipient->friend_notification)) {
+    if ((isset($recipient->friend_notification) && $recipient->friend_notification !== "-1") || !isset($recipient->friend_notification)) {
       $email = theme('flag_friend_message_email', array('0' => $status, '1' => $flag, '2' => $recipient, '3' => $sender));
       if (isset($email['body'])) {
         if (function_exists('messaging_message_send_user')) {
