@@ -25,14 +25,17 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
 
       // If both are now flagged, we record the relationship and remove the flags.
       if ($status === FLAG_FRIEND_BOTH) {
-        $id = db_insert('flag_friend')
-          ->fields(array(
-            'uid' => $account->uid,
-            'friend_uid' => $content_id,
-            'created' => $_SERVER['REQUEST_TIME'],
-          ))
-          ->execute();
-        NULL;
+        // Ensure no duplicates are made.
+        $exists = db_query("SELECT COUNT(1) FROM {flag_friend} WHERE (uid = :uid AND friend_uid = :friend_uid) OR (uid = :friend_uid AND friend_uid = :uid)", array(':uid' => $account->uid, ':friend_uid' => $content_id))->fetchField();
+        if (!$exists) {
+          $id = db_insert('flag_friend')
+            ->fields(array(
+              'uid' => $account->uid,
+              'friend_uid' => $content_id,
+              'created' => $_SERVER['REQUEST_TIME'],
+            ))
+            ->execute();
+        }
 
         // Remove any message entries for either user.
         flag_friend_message('unflag', $flag, $account->uid, $content_id);
