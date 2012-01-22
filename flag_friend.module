@@ -148,7 +148,7 @@ function flag_friend_get_flags($flag, $content_id, $reset = NULL) {
     $flagged_content[$uid][$content_type][$content_id] = array();
 
     // get flags with messages
-    $results = db_query("SELECT fc.*, ffm.message FROM {flag_content} fc LEFT JOIN {flag_friend_message} ffm ON ffm.fcid = fc.fcid WHERE fc.fid = :fc.fid AND fc.content_type = :fc.content_type AND fc.content_id = :fc.content_id", array(':fc.fid' => $flag->fid, ':fc.content_type' => $content_type, ':fc.content_id' => $content_id))->fetchAll();    
+    $results = db_query("SELECT fc.*, ffm.message FROM {flag_content} fc LEFT JOIN {flag_friend_message} ffm ON ffm.fcid = fc.fcid WHERE fc.fid = :fc.fid AND fc.content_type = :fc.content_type AND fc.content_id = :fc.content_id", array(':fc.fid' => $flag->fid, ':fc.content_type' => $content_type, ':fc.content_id' => $content_id))->fetchAll();
     foreach ($result as $new_flag) {
       $fcid = flag_friend_get_fcid($flag, $content_id, $new_flag->uid);
       $flagged_content[$uid][$content_type][$content_id][$fcid] = $new_flag;
@@ -236,8 +236,11 @@ function flag_friend_user_account($edit, $account) {
 function flag_friend_user_cancel($edit, $account, $method) {
   // remove any friend relationships if an account is removed
   db_delete('flag_friend')
-  ->condition('uid', $account->uid)
-  ->condition('friend_uid', $account->uid)
+  ->condition(
+    db_or()
+    ->condition('uid', $account->uid)
+    ->condition('friend_uid', $account->uid)
+  )
   ->execute();
 }
 
@@ -506,7 +509,7 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
         )
       )
     ->execute();
-    
+
     // Denial - the content_id is actually the account param in this case
     $account = user_load($content_id);
 

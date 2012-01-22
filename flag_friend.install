@@ -84,3 +84,10 @@ function flag_friend_update_6001() {
   db_add_index('flag_friend', 'friend_uid', array('friend_uid'));
   return st('Index added.');
 }
+
+/**
+ * Delete flag_friend data for canceled accounts.
+ */
+function flag_friend_update_7000() {
+  db_query("DELETE ff FROM {flag_friend} ff LEFT JOIN {users} u1 ON u1.uid = ff.uid LEFT JOIN {users} u2 ON u2.uid = ff.friend_uid WHERE u1.uid IS NULL OR u2.uid IS NULL");
+}
