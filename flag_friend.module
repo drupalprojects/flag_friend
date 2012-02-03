@@ -47,10 +47,24 @@ function flag_friend_flag($event, $flag, $content_id, $account) {
 
         // fire trigger
         module_invoke_all('flag_friend', 'approve', $friend_account, $account, $flag);
+
+        if (function_exists('rules_invoke_event_by_args')) {
+          rules_invoke_event_by_args('flag_friend_approve', array(
+            'approving_user' => $account,
+            'requesting_user' => $friend_account,
+          ));
+        }
       }
       else {
         // fire trigger
         module_invoke_all('flag_friend', 'request', $friend_account, $account, $flag);
+
+        if (function_exists('rules_invoke_event_by_args')) {
+          rules_invoke_event_by_args('flag_friend_request', array(
+            'receiving_user' => $friend_account,
+            'requesting_user' => $account,
+          ));
+        }
       }
     }
   }
@@ -127,6 +141,44 @@ function flag_friend_form_flag_form_alter(&$form, &$form_state, $form_id) {
     // Disable the machine name field for the 'friend' flag.
     $form['name']['#disabled'] = TRUE;
   }
+}
+
+/**
+ * Implements hook_rules_event_info().
+ */
+function flag_friend_rules_event_info() {
+  $items = array(
+    'flag_friend_approve' => array(
+      'label' => t('Friendship is approved'),
+      'group' => t('Flag friend'),
+      'variables' => array(
+        'approving_user' => array(
+          'type' => 'user',
+          'label' => t('Approving user'),
+        ),
+        'requesting_user' => array(
+          'type' => 'user',
+          'label' => t('Requesting user'),
+        ),
+      ),
+    ),
+    'flag_friend_request' => array(
+      'label' => t('Friendship is requested'),
+      'group' => t('Flag friend'),
+      'variables' => array(
+        'receiving_user' => array(
+          'type' => 'user',
+          'label' => t('Receiving user'),
+        ),
+        'requesting_user' => array(
+          'type' => 'user',
+          'label' => t('Requesting user'),
+        ),
+      ),
+    ),
+  );
+
+  return $items;
 }
 
 /**
