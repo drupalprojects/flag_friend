@@ -106,5 +106,6 @@ function flag_friend_update_7001() {
 
   foreach ($flag_friends as $id) {
     list($uid, $friend_uid) = explode('__', $id);
-    db_query("DELETE ff FROM {flag_friend} ff WHERE ff.uid = :uid AND ff.friend_uid = :friend_uid", array(':uid' => $uid, ':friend_uid' => $friend_uid));+  }
+    db_query("DELETE ff FROM {flag_friend} ff WHERE ff.uid = :uid AND ff.friend_uid = :friend_uid", array(':uid' => $uid, ':friend_uid' => $friend_uid));
+  }
 }
