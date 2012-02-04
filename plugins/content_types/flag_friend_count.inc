@@ -42,7 +42,12 @@ function flag_friend_flag_friend_count_content_type_render($subtype, $conf, $pan
  * Empty form so we can have the default override title.
  */
 function flag_friend_flag_friend_count_content_type_edit_form(&$form, &$form_state) {
-  // Does nothing!
+  $settings = ctools_custom_content_type_get_conf($form_state['subtype'], $form_state['conf']);
+  $form_state['settings'] = $settings;
+
+  if ($settings['custom_type'] == 'fixed') {
+    return $form; // no form for this case.
+  }
 }
 
 function flag_friend_flag_friend_count_content_type_edit_form_submit(&$form, &$form_state) {
