@@ -64,7 +64,7 @@ function flag_friend_preprocess_flag(&$vars) {
   // this hook preprocesses ALL flag links, so make sure we have ours
   if ($vars['flag']->name == 'friend') {
     global $user;
-    
+
     // Determine what the status in the friend process is.
     $status = flag_friend_determine_friend_status($vars['flag'], $user->uid, $vars['content_id']);
     switch ($status) {
@@ -397,7 +397,7 @@ function flag_friend_form_submit($form, &$form_state) {
   $content_id = $form_state['values']['current'][2];
   $token = $form_state['values']['current'][3];
   $status = flag_friend_determine_friend_status($flag, $user->uid, $content_id, TRUE);
-  
+
   if (isset($form_state['values']['flag_friend_message'])) {
     $flag->friend_message = $form_state['values']['flag_friend_message'];
     // Record message only if user pending request.
@@ -448,12 +448,12 @@ function flag_friend_unfriend($event, $flag, $content_id, $account, $status) {
     $flag->flag($event, $content_id, $account);
   }
   elseif ($event == 'unfriend') {
-    // remove the friend relationship    
+    // remove the friend relationship
     db_query('DELETE FROM {flag_friend} WHERE (uid = %d AND friend_uid = %d) OR (uid = %d AND friend_uid = %d)', $user->uid, $content_id, $content_id, $user->uid);
 
     // Denial - the content_id is actually the account param in this case
     $account = user_load(array('uid' => $content_id));
-    
+
     // Fire trigger
     module_invoke_all('flag_friend', 'remove', $account, $user, $flag);
   }
@@ -487,7 +487,7 @@ function flag_friend_message_email($status, $flag, $recipient_uid, $sender) {
   // if the user can receive notifications
   if (user_access('receive friend email notification', $recipient)) {
     // and they've expressed they want them
-    if ((isset($recipient->friend_notification) && $recipient->friend_notification !== -1) || !isset($recipient->friend_notification)) {
+    if ((isset($recipient->friend_notification) && $recipient->friend_notification !== "-1") || !isset($recipient->friend_notification)) {
       $email = theme('flag_friend_message_email', $status, $flag, $recipient, $sender);
       if (isset($email['body'])) {
         if (function_exists('messaging_message_send_user')) {
@@ -628,7 +628,7 @@ function flag_friend_flag_default_flags() {
     'name' => 'friend',
     'title' => 'Friend',
     'global' => false,
-    'types' => 
+    'types' =>
     array (
     ),
     'flag_short' => 'Add friend',
@@ -639,13 +639,13 @@ function flag_friend_flag_default_flags() {
     'unflag_message' => '',
     'unflag_denied_text' => '',
     'link_type' => 'confirm',
-    'roles' => 
+    'roles' =>
     array (
-      'flag' => 
+      'flag' =>
       array (
         0 => '2',
       ),
-      'unflag' => 
+      'unflag' =>
       array (
         0 => '2',
       ),
@@ -655,7 +655,7 @@ function flag_friend_flag_default_flags() {
     'flag_confirmation' => 'Are you sure you want to add [user] to your list of friends?',
     'unflag_confirmation' => 'Are you sure you want to remove [user] from your list of friends?',
     'status' => false,
-    'locked' => 
+    'locked' =>
     array (
       'name' => 'name',
       'global' => 'global',
@@ -717,7 +717,7 @@ function flag_friend_hook_info() {
 function flag_friend_flag_friend($op, $friend, $user) {
   if (function_exists('_trigger_get_hook_aids')) {
     $aids = _trigger_get_hook_aids('flag_friend', $op);
-  
+
     switch ($op) {
       // in these cases, the users performing the operations are flipped
       case 'approve':
@@ -885,5 +885,5 @@ function flag_friend_preprocess_author_pane(&$variables) {
 function flag_friend_ctools_plugin_directory($module, $plugin) {
   if ($module == 'ctools') {
     return 'plugins/'. $plugin;
-  }  
+  }
 }
