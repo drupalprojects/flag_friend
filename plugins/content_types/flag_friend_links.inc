@@ -1,23 +1,16 @@
 <?php
-
 /**
  * @file
  * Panel content type that exposes flag friend links for adding friends,
  * removing them or show the cancel link after request friendship.
  */
-
-/**
- * Callback function to supply a list of content types.
- */
-function flag_friend_flag_friend_links_ctools_content_types() {
-  return array(
-    'single' => TRUE,
-    'title' => t('Flag Friend Links'),
-    'description' => t('Flag Friend Links for adding / removing friends'),
-    'required context' => new ctools_context_required(t('User'), 'user'),
-    'category' => t('Miscellaneous'),
-  );
-}
+$plugin = array(
+  'single' => TRUE,
+  'title' => t('Flag Friend Links'),
+  'description' => t('Flag Friend Links for adding / removing friends'),
+  'required context' => new ctools_context_required(t('User'), 'user'),
+  'category' => t('User'),
+);
 
 /**
  * Render the unread messages content type.

@@ -4,19 +4,13 @@
  * @file
  * Panels content type that shows the number of friends of a given user.
  */
-
-/**
- * Callback function to supply a list of content types.
- */
-function flag_friend_flag_friend_count_ctools_content_types() {
-  return array(
-    'single' => TRUE,
-    'title' => t('Flag Friend Count'),
-    'description' => t('Count of friends of a given user'),
-    'required context' => new ctools_context_required(t('User'), 'user'),
-    'category' => t('Miscellaneous'),
-  );
-}
+$plugin = array(
+  'title' => t('Flag Friend Count'),
+  'description' => t('Count of friends of a given user'),
+  'single' => TRUE,
+  'required context' => new ctools_context_required(t('User'), 'user'),
+  'category' => t('User'),
+);
 
 /**
  * Render the unread messages content type.
