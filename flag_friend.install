@@ -2,6 +2,7 @@
 
 /**
  * @file flag_friend.install
+ * Flag Friend module install/schema/update hooks.
  */
 
 /**
