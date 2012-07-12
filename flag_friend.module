@@ -677,7 +677,7 @@ function theme_flag_friend_message_email($variables) {
         '!firstname' => isset($sender->firstname) ? $sender->firstname : $sender->name,
         '!site' => variable_get('site_name', ''),
         '!message' => $flag->friend_message ? t('Message:') . $flag->friend_message : '',
-        '!link' => url('user/' . $sender->uid, array('absolute' => TRUE)),
+        '!link' => url('user/' . $sender->uid . '/friends/pending', array('absolute' => TRUE)),
         ));
       break;
 
