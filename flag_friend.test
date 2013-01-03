@@ -38,7 +38,7 @@ class FlagFriendUserTestCase extends DrupalWebTestCase {
       'roles[flag][2]' => TRUE,
       'roles[unflag][2]' => TRUE,
     );
-    $this->drupalPost('admin/structure/flags/manage/friend', $edit, t('Submit'));
+    $this->drupalPost('admin/structure/flags/manage/friend', $edit, t('Save flag'));
   }
 
   public function addFriendsAndRequests() {
