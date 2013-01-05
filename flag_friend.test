@@ -16,7 +16,7 @@ class FlagFriendUserTestCase extends DrupalWebTestCase {
 
   public function setUp() {
     // Load the flag and flag_friend modules.
-    parent::setUp('flag', 'flag_friend');
+    parent::setUp('flag', 'flag_friend', 'views');
 
     // Create Admin User.
     $this->admin_user = $this->drupalCreateUser(array(
@@ -159,7 +159,6 @@ class FlagFriendViewsTestCase extends FlagFriendUserTestCase {
   public function setUp() {
     // Load the views module.
     parent::setUp();
-    module_enable(array('views'));
   }
 
   public function testDefaultViews() {
