@@ -157,7 +157,6 @@ class FlagFriendViewsTestCase extends FlagFriendUserTestCase {
   }
 
   public function setUp() {
-    // Load the views module.
     parent::setUp();
   }
 

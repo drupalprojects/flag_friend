@@ -14,3 +14,5 @@ files[] = includes/flag_friend_handler_field_links.inc
 files[] = access/flag_friend_is_friend.inc
 files[] = content_types/flag_friend_count.inc
 files[] = content_types/flag_friend_links.inc
+
+test_dependencies[] = views
