@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file flag_friend.install
+ * @file
  * Flag Friend module install/schema/update hooks.
  */
 

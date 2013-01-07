@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @file flag.module
- * Written by Jerad Bitner (sirkitree.net)
+ * @file
+ * Allows users to flag other users as "Friends".
  */
 
 // define our statuses
@@ -754,7 +754,7 @@ function flag_friend_theme() {
 function flag_friend_flag_default_flags() {
   $flags = array();
   // Exported flag: "Friend".
-  $flags[] = array (
+  $flags[] = array(
     'content_type' => 'user',
     'name' => 'friend',
     'title' => 'Friend',
@@ -982,7 +982,7 @@ function flag_friend_preprocess_author_pane(&$variables) {
         // Pending friend
         $variables['flag_friend_link'] = $flag->theme($flag->is_flagged($account_id) ? 'unflag' : 'flag', $account_id);
         $variables['flag_friend'] =
-        l(theme('image', array('path' => "$image_path/buddy-remove.png", 'alt' => t('Friend Requested. Cancel?'), 'title' => t(' Friend Requested. Cancel?'))),
+        l(theme('image', array('path' => "$image_path/buddy-remove.png", 'alt' => t('Friend Requested. Cancel?'), 'title' => ' ' . t('Friend Requested. Cancel?'))),
           "flag/confirm/unflag/friend/$account_id",
           array('query' => drupal_get_destination(),
             'html' => TRUE,

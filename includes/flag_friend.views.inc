@@ -1,9 +1,8 @@
 <?php
 
 /**
- * @file flag_friend.views.inc
- *
- * Provide Flag Friend data to Views.
+ * @file
+ * Provides Flag Friend data to Views.
  */
 
 /**

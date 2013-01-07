@@ -1,9 +1,14 @@
 <?php
 
 /**
- * @file flag_friend_handler_argument_numeric.inc
- *
+ * @file
  * Contains the custom argument handler for the flag_friend table.
+ */
+
+/**
+ * Provides a view argument handler.
+ *
+ * @ingroup views
  */
 class flag_friend_handler_argument_numeric extends views_handler_argument_numeric {
   function option_definition() {
@@ -40,7 +45,8 @@ class flag_friend_handler_argument_numeric extends views_handler_argument_numeri
     //Detect  if $value is array or not
     if (is_array($this->value)) {
       $value = $this->value;
-    } else {
+    }
+    else {
       $value = array($this->argument);
     }
 
@@ -58,13 +64,17 @@ class flag_friend_handler_argument_numeric extends views_handler_argument_numeri
     }
 
     //If no friends, pass something or SQL borks
-    if (count($all_friends) === 0){
+    if (count($all_friends) === 0) {
       $all_friends = array(0);
     }
 
     //Determine field
-    $field = 'users';
-    $field .= $this->view->base_table != 'users'? '_' .$this->view->base_table: '';
+    if ($this->view->base_table != 'users') {
+      $field .= 'users_' . $this->view->base_table;
+    }
+    else {
+      $field = 'users';
+    }
 
     $this->query->add_where(0, $field . ".uid", $all_friends);
   }

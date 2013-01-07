@@ -1,4 +1,9 @@
 <?php
+/**
+ * @file
+ * Tests for flag_friend.
+ *
+ */
 
 class FlagFriendUserTestCase extends DrupalWebTestCase {
   protected $admin_user;

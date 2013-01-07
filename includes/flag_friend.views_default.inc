@@ -1,8 +1,7 @@
 <?php
 
 /**
- * @file flag_friend.views_default.inc
- *
+ * @file
  * Default view for flag friend which provides a friend listing, a pending
  * friends listing, and a listing of people you've requested as friends.
  */
