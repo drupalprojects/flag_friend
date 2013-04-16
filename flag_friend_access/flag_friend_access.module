@@ -99,7 +99,7 @@ function flag_friend_access_node_load($nodes, $types) {
  * Implements hook_node_insert().
  */
 function flag_friend_access_node_insert($node) {
-  if (property_exists($node, 'flag_friend_access')) {
+  if (isset($node->flag_friend_access) && ($node->flag_friend_access == 1)) {
     $id = db_insert('flag_friend_access')
   ->fields(array(
     'uid' => $node->uid,
