@@ -31,7 +31,7 @@ class flag_friend_handler_argument_numeric extends views_handler_argument_numeri
     );
   }
 
-  function query() {
+  function query($group_by = FALSE) {
     if (!empty($this->options['break_phrase'])) {
       views_break_phrase($this->argument, $this);
     }
