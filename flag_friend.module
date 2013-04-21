@@ -268,21 +268,45 @@ function flag_friend_get_friend_count($uid, $reset = NULL) {
 }
 
 /**
- * Implements hook_user_XXX().
+ * Implements hook_form_FORM_ID_alter().
  */
-function flag_friend_user_account($edit, $account) {
+function flag_friend_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  $account = $form['#user'];
+
   // The user account edit form is about to be displayed. The module should present the form elements it wishes to inject into the form.
-  $form = array();
-  $form['friend_notification'] = array(
+  $form['flag_friend'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Flag Friend Settings'),
+      '#access' => 'receive friend email notification',
+    );
+
+  $default_value = 0;
+  if (isset($account->data['friend_notification'])) {
+    $default_value = $account->data['friend_notification'];
+  }
+
+  $form['flag_friend']['friend_notification'] = array(
         '#type' => 'select',
         '#title' => t('Friend notification'),
         '#description' => t('Would you like to be notified when someone wants to be friends with you?'),
         '#multiple' => FALSE,
         '#options' => array(0 => t('Yes'), -1 => t('No')),
-        '#default_value' => isset($account->friend_notification) ? $account->friend_notification : FLAG_FRIEND_NOTIFICATION,
+        '#default_value' => $default_value,
         '#weight' => -10,
-      );
-  return $form;
+        '#return_value' => 1,
+    );
+}
+
+/**
+ * Implements hook_user_presave().
+ */
+function flag_friend_user_presave(&$edit, $account, $category) {
+  if (isset($edit['friend_notification'])) {
+    $edit['data']['friend_notification'] = $edit['friend_notification'];
+  }
+  else {
+    $edit['data']['friend_notification'] = 0;
+  }
 }
 
 /**
