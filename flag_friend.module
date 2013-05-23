@@ -268,44 +268,60 @@ function flag_friend_get_friend_count($uid, $reset = NULL) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_alter().
  */
-function flag_friend_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
-  $account = $form['#user'];
+function flag_friend_form_alter(&$form, &$form_state, $form_id) {
+  if (($form_id == 'user_register_form' || $form_id == 'user_profile_form') && $form['#user_category'] == 'account') {
+    // Create array to be able to merge in fieldset and avoid overwriting
+    // already added options.
+    if (!isset($form['flag_friend'])) {
+      $form['flag_friend'] = array();
+    }
 
-  // The user account edit form is about to be displayed. The module should present the form elements it wishes to inject into the form.
-  $form['flag_friend'] = array(
+    $form['flag_friend'] += array(
       '#type' => 'fieldset',
-      '#title' => t('Flag Friend Settings'),
-      '#access' => 'receive friend email notification',
+      '#title' => t('Friend notifications settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#after_build' => array('flag_friend_account_fieldset_remove_if_empty'),
     );
 
-  $default_value = 0;
-  if (isset($account->data['friend_notification'])) {
-    $default_value = $account->data['friend_notification'];
+    $account = $form_state['user'];
+
+    $form['flag_friend']['flag_friend_request_notify'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Receive email notifications for friend requests'),
+      '#description' => t('Would you like to be notified when someone wants to be friends with you?'),
+      '#default_value' => isset($account->data['flag_friend_request_notify']) ? $account->data['flag_friend_request_notify'] : variable_get('flag_friend_request_notify', TRUE),
+    );
+    $form['flag_friend']['flag_friend_approved_notify'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Receive email notifications for friend approvals'),
+      '#description' => t('Would you like to be notified when someone approved your friend request?'),
+      '#default_value' => isset($account->data['flag_friend_approved_notify']) ? $account->data['flag_friend_approved_notify'] : variable_get('flag_friend_approved_notify', TRUE),
+    );
   }
+}
 
-  $form['flag_friend']['friend_notification'] = array(
-        '#type' => 'select',
-        '#title' => t('Friend notification'),
-        '#description' => t('Would you like to be notified when someone wants to be friends with you?'),
-        '#multiple' => FALSE,
-        '#options' => array(0 => t('Yes'), -1 => t('No')),
-        '#default_value' => $default_value,
-        '#weight' => -10,
-        '#return_value' => 1,
-    );
+/**
+ * Hides the settings fieldset if there are no options to be displayed.
+ */
+function flag_friend_account_fieldset_remove_if_empty($element) {
+  if (count(element_children($element)) == 0) {
+    $element['#access'] = FALSE;
+  }
+  return $element;
 }
 
 /**
  * Implements hook_user_presave().
  */
 function flag_friend_user_presave(&$edit, $account, $category) {
-  if (isset($edit['friend_notification'])) {
-    $edit['data']['friend_notification'] = $edit['friend_notification'];
+  if (isset($edit['flag_friend_request_notify'])) {
+    $edit['data']['flag_friend_request_notify'] = $edit['flag_friend_request_notify'];
   }
-  else {
-    $edit['data']['friend_notification'] = 0;
+  if (isset($edit['flag_friend_approved_notify'])) {
+    $edit['data']['flag_friend_approved_notify'] = $edit['flag_friend_approved_notify'];
   }
 }
 
@@ -633,10 +649,17 @@ function flag_friend_get_fcid($flag, $content_id, $account_uid) {
  */
 function flag_friend_message_email($status, $flag, $recipient_uid, $sender) {
   $recipient = user_load($recipient_uid);
-  // if the user can receive notifications
   if (user_access('receive friend email notification', $recipient)) {
-    // and they've expressed they want them
-    if ((isset($recipient->friend_notification) && $recipient->friend_notification !== "-1") || !isset($recipient->friend_notification)) {
+    // The user can receive notifications.
+    if ($status == FLAG_FRIEND_APPROVAL) {
+      $key = 'flag_friend_approved_notify';
+    }
+    else {
+      $key = 'flag_friend_request_notify';
+    }
+
+    if ((isset($recipient->data[$key]) && $recipient->data[$key]) || (!isset($recipient->data[$key]) && variable_get($key, TRUE))) {
+      // And they've expressed they want them.
       $email = theme('flag_friend_message_email', array('0' => $status, '1' => $flag, '2' => $recipient, '3' => $sender));
       if (isset($email['body'])) {
         if (function_exists('messaging_message_send_user')) {
@@ -682,7 +705,7 @@ function theme_flag_friend_message_email($variables) {
   $email['type'] = 'flag-friend';
 
   switch ($status) {
-    case FLAG_FRIEND_FLAGGED:
+    case FLAG_FRIEND_APPROVAL:
       // sender confirmed you as a friend
       $email['subject'] = t('!username confirmed you as a friend on !site', array(
         '!username' => $sender->name,
