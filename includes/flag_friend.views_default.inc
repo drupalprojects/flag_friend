@@ -10,336 +10,297 @@
  * Implements hook_views_default_views().
  */
 function flag_friend_views_default_views() {
-  $view = new view;
+  $view = new view();
   $view->name = 'friends';
-  $view->description = 'Various page displays for flag_friend.';
-  $view->tag = 'flag.friend';
+  $view->description = 'Flag Friend Default Views';
+  $view->tag = 'default';
   $view->base_table = 'users';
-  $view->human_name = '';
-  $view->api_version = '3.0-alpha1';
+  $view->human_name = 'Friends';
+  $view->core = 7;
+  $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
-  /* Display: Defaults */
-  $handler = $view->new_display('default', 'Defaults', 'default');
-  $handler->display->display_options['access']['type'] = 'perm';
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Friends';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'flag_friend';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
-  $handler->display->display_options['query']['options']['distinct'] = TRUE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '10';
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
+    'name' => 'name',
     'picture' => 'picture',
-    'name' => 'picture',
-    'message' => 'message',
-    'ops' => 'ops',
-    'uid' => 'ops',
   );
   $handler->display->display_options['style_options']['default'] = '-1';
   $handler->display->display_options['style_options']['info'] = array(
-    'picture' => array(
-      'sortable' => 0,
-      'separator' => '',
-    ),
     'name' => array(
       'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
       'separator' => '',
+      'empty_column' => 0,
     ),
-    'message' => array(
+    'picture' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
       'separator' => '',
-    ),
-    'ops' => array(
-      'separator' => '',
-    ),
-    'uid' => array(
-      'separator' => '',
+      'empty_column' => 0,
     ),
   );
-  $handler->display->display_options['style_options']['override'] = 1;
-  $handler->display->display_options['style_options']['sticky'] = 0;
-  /* Empty text: Global: Text area */
-  $handler->display->display_options['empty']['text']['id'] = 'area';
-  $handler->display->display_options['empty']['text']['table'] = 'views';
-  $handler->display->display_options['empty']['text']['field'] = 'area';
-  $handler->display->display_options['empty']['text']['empty'] = FALSE;
-  $handler->display->display_options['empty']['text']['content'] = 'No Friends have been added.';
-  $handler->display->display_options['empty']['text']['format'] = '1';
-  /* Relationship: Flag Friend: friend */
-  $handler->display->display_options['relationships']['flag_friend_content_rel']['id'] = 'flag_friend_content_rel';
-  $handler->display->display_options['relationships']['flag_friend_content_rel']['table'] = 'users';
-  $handler->display->display_options['relationships']['flag_friend_content_rel']['field'] = 'flag_friend_content_rel';
-  $handler->display->display_options['relationships']['flag_friend_content_rel']['flag'] = 'friend';
-  $handler->display->display_options['relationships']['flag_friend_content_rel']['user_scope'] = 'any';
-  /* Field: User: Name */
-  $handler->display->display_options['fields']['name']['id'] = 'name';
-  $handler->display->display_options['fields']['name']['table'] = 'users';
-  $handler->display->display_options['fields']['name']['field'] = 'name';
-  $handler->display->display_options['fields']['name']['link_to_user'] = 1;
-  /* Field: Flags: Flag link */
-  $handler->display->display_options['fields']['ops']['id'] = 'ops';
-  $handler->display->display_options['fields']['ops']['table'] = 'flag_content';
-  $handler->display->display_options['fields']['ops']['field'] = 'ops';
-  $handler->display->display_options['fields']['ops']['relationship'] = 'flag_friend_content_rel';
-  /* Field: Flag friend: Flag friend links */
-  $handler->display->display_options['fields']['uid']['id'] = 'uid';
-  $handler->display->display_options['fields']['uid']['table'] = 'flag_friend';
-  $handler->display->display_options['fields']['uid']['field'] = 'uid';
-  /* Argument: Flag friend: Friends of */
-  $handler->display->display_options['arguments']['friend_uid']['id'] = 'friend_uid';
-  $handler->display->display_options['arguments']['friend_uid']['table'] = 'flag_friend';
-  $handler->display->display_options['arguments']['friend_uid']['field'] = 'friend_uid';
-  $handler->display->display_options['arguments']['friend_uid']['style_plugin'] = 'default_summary';
-  $handler->display->display_options['arguments']['friend_uid']['default_argument_type'] = 'fixed';
-  /* Filter: User: Active */
-  $handler->display->display_options['filters']['status']['id'] = 'status';
-  $handler->display->display_options['filters']['status']['table'] = 'users';
-  $handler->display->display_options['filters']['status']['field'] = 'status';
-  $handler->display->display_options['filters']['status']['value'] = '1';
-  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-
-  /* Display: Page (friends) */
-  $handler = $view->new_display('page', 'Page (friends)', 'page_1');
-  $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Friends';
-  $handler->display->display_options['defaults']['relationships'] = FALSE;
-  $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: User: Picture */
-  $handler->display->display_options['fields']['picture']['id'] = 'picture';
-  $handler->display->display_options['fields']['picture']['table'] = 'users';
-  $handler->display->display_options['fields']['picture']['field'] = 'picture';
-  $handler->display->display_options['fields']['picture']['label'] = 'Friend';
-  /* Field: User: Name */
-  $handler->display->display_options['fields']['name']['id'] = 'name';
-  $handler->display->display_options['fields']['name']['table'] = 'users';
-  $handler->display->display_options['fields']['name']['field'] = 'name';
-  $handler->display->display_options['fields']['name']['link_to_user'] = 1;
-  /* Field: Flag friend: Flag friend links */
-  $handler->display->display_options['fields']['uid']['id'] = 'uid';
-  $handler->display->display_options['fields']['uid']['table'] = 'flag_friend';
-  $handler->display->display_options['fields']['uid']['field'] = 'uid';
-  $handler->display->display_options['fields']['uid']['label'] = 'Actions';
-  $handler->display->display_options['defaults']['arguments'] = FALSE;
-  /* Argument: Flag friend: Friends of */
-  $handler->display->display_options['arguments']['friend_uid']['id'] = 'friend_uid';
-  $handler->display->display_options['arguments']['friend_uid']['table'] = 'flag_friend';
-  $handler->display->display_options['arguments']['friend_uid']['field'] = 'friend_uid';
-  $handler->display->display_options['arguments']['friend_uid']['default_action'] = 'default';
-  $handler->display->display_options['arguments']['friend_uid']['style_plugin'] = 'default_summary';
-  $handler->display->display_options['arguments']['friend_uid']['default_argument_type'] = 'user';
-  $handler->display->display_options['arguments']['friend_uid']['default_argument_options']['user'] = FALSE;
-  $handler->display->display_options['arguments']['friend_uid']['break_phrase'] = 0;
-  $handler->display->display_options['arguments']['friend_uid']['not'] = 0;
-  $handler->display->display_options['path'] = 'user/%/friends/all';
-  $handler->display->display_options['menu']['type'] = 'default tab';
-  $handler->display->display_options['menu']['title'] = 'View All Friends';
-  $handler->display->display_options['menu']['weight'] = '-10';
-  $handler->display->display_options['tab_options']['type'] = 'tab';
-  $handler->display->display_options['tab_options']['title'] = 'Friends';
-  $handler->display->display_options['tab_options']['weight'] = '0';
-
-  /* Display: Page (pending) */
-  $handler = $view->new_display('page', 'Page (pending)', 'page_2');
-  $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Friend Requests';
-  $handler->display->display_options['defaults']['header'] = FALSE;
-  /* Header: Global: Text area */
-  $handler->display->display_options['header']['text']['id'] = 'area';
-  $handler->display->display_options['header']['text']['table'] = 'views';
-  $handler->display->display_options['header']['text']['field'] = 'area';
-  $handler->display->display_options['header']['text']['empty'] = FALSE;
-  $handler->display->display_options['header']['text']['content'] = 'These are users who would like to be your friend.';
-  $handler->display->display_options['header']['text']['format'] = '1';
-  $handler->display->display_options['defaults']['empty'] = FALSE;
-  /* Empty text: Global: Text area */
-  $handler->display->display_options['empty']['text']['id'] = 'area';
-  $handler->display->display_options['empty']['text']['table'] = 'views';
-  $handler->display->display_options['empty']['text']['field'] = 'area';
-  $handler->display->display_options['empty']['text']['empty'] = FALSE;
-  $handler->display->display_options['empty']['text']['content'] = 'No Friend Requests.';
-  $handler->display->display_options['defaults']['fields'] = FALSE;
-  /* Field: User: Picture */
-  $handler->display->display_options['fields']['picture']['id'] = 'picture';
-  $handler->display->display_options['fields']['picture']['table'] = 'users';
-  $handler->display->display_options['fields']['picture']['field'] = 'picture';
-  $handler->display->display_options['fields']['picture']['label'] = 'User';
-  /* Field: User: Name */
-  $handler->display->display_options['fields']['name']['id'] = 'name';
-  $handler->display->display_options['fields']['name']['table'] = 'users';
-  $handler->display->display_options['fields']['name']['field'] = 'name';
-  $handler->display->display_options['fields']['name']['link_to_user'] = 1;
-  /* Field: Flag friend: Message */
-  $handler->display->display_options['fields']['message']['id'] = 'message';
-  $handler->display->display_options['fields']['message']['table'] = 'flag_friend_message';
-  $handler->display->display_options['fields']['message']['field'] = 'message';
-  $handler->display->display_options['fields']['message']['relationship'] = 'flag_friend_content_rel';
-  /* Field: Flags: Flag link */
-  $handler->display->display_options['fields']['ops']['id'] = 'ops';
-  $handler->display->display_options['fields']['ops']['table'] = 'flag_content';
-  $handler->display->display_options['fields']['ops']['field'] = 'ops';
-  $handler->display->display_options['fields']['ops']['relationship'] = 'flag_friend_content_rel';
-  $handler->display->display_options['fields']['ops']['label'] = 'Actions';
-  /* Field: Flag friend: Flag friend links */
-  $handler->display->display_options['fields']['uid']['id'] = 'uid';
-  $handler->display->display_options['fields']['uid']['table'] = 'flag_friend';
-  $handler->display->display_options['fields']['uid']['field'] = 'uid';
-  $handler->display->display_options['defaults']['arguments'] = FALSE;
-  /* Argument: Flags: Content ID */
-  $handler->display->display_options['arguments']['content_id']['id'] = 'content_id';
-  $handler->display->display_options['arguments']['content_id']['table'] = 'flag_content';
-  $handler->display->display_options['arguments']['content_id']['field'] = 'content_id';
-  $handler->display->display_options['arguments']['content_id']['relationship'] = 'flag_friend_content_rel';
-  $handler->display->display_options['arguments']['content_id']['default_action'] = 'default';
-  $handler->display->display_options['arguments']['content_id']['style_plugin'] = 'default_summary';
-  $handler->display->display_options['arguments']['content_id']['default_argument_type'] = 'user';
-  $handler->display->display_options['arguments']['content_id']['default_argument_options']['user'] = FALSE;
-  $handler->display->display_options['arguments']['content_id']['validate_type'] = 'php';
-  $handler->display->display_options['arguments']['content_id']['validate_options']['code'] = 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-                                        return FALSE;
-                                      }
-                                      return TRUE;';
-  $handler->display->display_options['arguments']['content_id']['break_phrase'] = 0;
-  $handler->display->display_options['arguments']['content_id']['not'] = 0;
-  $handler->display->display_options['path'] = 'user/%/friends/pending';
-  $handler->display->display_options['menu']['type'] = 'tab';
-  $handler->display->display_options['menu']['title'] = 'Friend Requests';
-  $handler->display->display_options['menu']['weight'] = '0';
-
-  /* Display: Page (flagged) */
-  $handler = $view->new_display('page', 'Page (flagged)', 'page_3');
-  $handler->display->display_options['defaults']['title'] = FALSE;
-  $handler->display->display_options['title'] = 'Awaiting Friend Approvals';
-  $handler->display->display_options['defaults']['header'] = FALSE;
-  /* Header: Global: Text area */
-  $handler->display->display_options['header']['text']['id'] = 'area';
-  $handler->display->display_options['header']['text']['table'] = 'views';
-  $handler->display->display_options['header']['text']['field'] = 'area';
-  $handler->display->display_options['header']['text']['empty'] = TRUE;
-  $handler->display->display_options['header']['text']['content'] = 'These are users who you have requested to be friends with.';
-  $handler->display->display_options['header']['text']['format'] = '1';
-  $handler->display->display_options['defaults']['empty'] = FALSE;
-  /* Empty text: Global: Text area */
-  $handler->display->display_options['empty']['text']['id'] = 'area';
-  $handler->display->display_options['empty']['text']['table'] = 'views';
-  $handler->display->display_options['empty']['text']['field'] = 'area';
-  $handler->display->display_options['empty']['text']['empty'] = FALSE;
-  $handler->display->display_options['empty']['text']['content'] = 'No Friend Requests.';
-  $handler->display->display_options['defaults']['relationships'] = FALSE;
+  /* No results behavior: Global: Text area */
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = TRUE;
+  $handler->display->display_options['empty']['area']['content'] = 'No friends have been added.';
+  $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
   /* Relationship: Flags: friend */
   $handler->display->display_options['relationships']['flag_content_rel']['id'] = 'flag_content_rel';
   $handler->display->display_options['relationships']['flag_content_rel']['table'] = 'users';
   $handler->display->display_options['relationships']['flag_content_rel']['field'] = 'flag_content_rel';
   $handler->display->display_options['relationships']['flag_content_rel']['flag'] = 'friend';
-  $handler->display->display_options['relationships']['flag_content_rel']['user_scope'] = 'any';
-  /* Relationship: Flags: User */
-  $handler->display->display_options['relationships']['uid']['id'] = 'uid';
-  $handler->display->display_options['relationships']['uid']['table'] = 'flag_content';
-  $handler->display->display_options['relationships']['uid']['field'] = 'uid';
-  $handler->display->display_options['relationships']['uid']['relationship'] = 'flag_content_rel';
-  $handler->display->display_options['relationships']['uid']['required'] = 0;
+  /* Field: User: Picture */
+  $handler->display->display_options['fields']['picture']['id'] = 'picture';
+  $handler->display->display_options['fields']['picture']['table'] = 'users';
+  $handler->display->display_options['fields']['picture']['field'] = 'picture';
+  $handler->display->display_options['fields']['picture']['label'] = '';
+  $handler->display->display_options['fields']['picture']['element_label_colon'] = FALSE;
+  /* Field: User: Name */
+  $handler->display->display_options['fields']['name']['id'] = 'name';
+  $handler->display->display_options['fields']['name']['table'] = 'users';
+  $handler->display->display_options['fields']['name']['field'] = 'name';
+  $handler->display->display_options['fields']['name']['relationship'] = 'uid';
+  $handler->display->display_options['fields']['name']['label'] = 'Requester';
+  $handler->display->display_options['fields']['name']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['name']['alter']['ellipsis'] = FALSE;
+  $handler->display->display_options['fields']['name']['element_label_colon'] = FALSE;
+  /* Field: Flags: Flag link */
+  $handler->display->display_options['fields']['ops']['id'] = 'ops';
+  $handler->display->display_options['fields']['ops']['table'] = 'flagging';
+  $handler->display->display_options['fields']['ops']['field'] = 'ops';
+  $handler->display->display_options['fields']['ops']['relationship'] = 'flag_content_rel';
+  /* Sort criterion: User: Created date */
+  $handler->display->display_options['sorts']['created']['id'] = 'created';
+  $handler->display->display_options['sorts']['created']['table'] = 'users';
+  $handler->display->display_options['sorts']['created']['field'] = 'created';
+  $handler->display->display_options['sorts']['created']['order'] = 'DESC';
+  /* Filter criterion: User: Active */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'users';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+  /* Filter criterion: Flag friend: Relationship Status */
+  $handler->display->display_options['filters']['status_1']['id'] = 'status_1';
+  $handler->display->display_options['filters']['status_1']['table'] = 'flag_friend';
+  $handler->display->display_options['filters']['status_1']['field'] = 'status';
+  $handler->display->display_options['filters']['status_1']['relationship'] = 'flag_content_rel';
+  $handler->display->display_options['filters']['status_1']['value'] = '1';
+
+  /* Display: Page: All Friends */
+  $handler = $view->new_display('page', 'Page: All Friends', 'page');
+  $handler->display->display_options['display_description'] = 'Listing of all approved friends';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: User: Picture */
   $handler->display->display_options['fields']['picture']['id'] = 'picture';
   $handler->display->display_options['fields']['picture']['table'] = 'users';
   $handler->display->display_options['fields']['picture']['field'] = 'picture';
-  $handler->display->display_options['fields']['picture']['label'] = 'User';
+  $handler->display->display_options['fields']['picture']['label'] = '';
+  $handler->display->display_options['fields']['picture']['element_label_colon'] = FALSE;
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
   $handler->display->display_options['fields']['name']['field'] = 'name';
-  $handler->display->display_options['fields']['name']['link_to_user'] = 1;
-  /* Field: Flag friend: Message */
-  $handler->display->display_options['fields']['message']['id'] = 'message';
-  $handler->display->display_options['fields']['message']['table'] = 'flag_friend_message';
-  $handler->display->display_options['fields']['message']['field'] = 'message';
-  $handler->display->display_options['fields']['message']['relationship'] = 'flag_content_rel';
+  $handler->display->display_options['fields']['name']['label'] = 'User';
+  $handler->display->display_options['fields']['name']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['name']['alter']['ellipsis'] = FALSE;
   /* Field: Flags: Flag link */
   $handler->display->display_options['fields']['ops']['id'] = 'ops';
-  $handler->display->display_options['fields']['ops']['table'] = 'flag_content';
+  $handler->display->display_options['fields']['ops']['table'] = 'flagging';
   $handler->display->display_options['fields']['ops']['field'] = 'ops';
   $handler->display->display_options['fields']['ops']['relationship'] = 'flag_content_rel';
-  $handler->display->display_options['fields']['ops']['label'] = 'Actions';
-  $handler->display->display_options['defaults']['arguments'] = FALSE;
-  /* Argument: User: Uid */
-  $handler->display->display_options['arguments']['uid']['id'] = 'uid';
-  $handler->display->display_options['arguments']['uid']['table'] = 'users';
-  $handler->display->display_options['arguments']['uid']['field'] = 'uid';
-  $handler->display->display_options['arguments']['uid']['relationship'] = 'uid';
-  $handler->display->display_options['arguments']['uid']['default_action'] = 'default';
-  $handler->display->display_options['arguments']['uid']['style_plugin'] = 'default_summary';
-  $handler->display->display_options['arguments']['uid']['default_argument_type'] = 'user';
-  $handler->display->display_options['arguments']['uid']['default_argument_options']['user'] = FALSE;
-  $handler->display->display_options['arguments']['uid']['validate_type'] = 'php';
-  $handler->display->display_options['arguments']['uid']['validate_options']['code'] = 'if ($argument !== $GLOBALS[\'user\']->uid && !user_access(\'administer users\')) {
-      return FALSE;
-    }
-    return TRUE;';
-  $handler->display->display_options['arguments']['uid']['break_phrase'] = 0;
-  $handler->display->display_options['arguments']['uid']['not'] = 0;
-  $handler->display->display_options['path'] = 'user/%/friends/flagged';
-  $handler->display->display_options['menu']['type'] = 'tab';
-  $handler->display->display_options['menu']['title'] = 'Awaiting Friend Approvals';
-  $handler->display->display_options['menu']['weight'] = '0';
+  $handler->display->display_options['path'] = 'user/%/friends/all';
+  $handler->display->display_options['menu']['type'] = 'default tab';
+  $handler->display->display_options['menu']['title'] = 'View All Friends';
+  $handler->display->display_options['menu']['description'] = 'View all of your friends';
+  $handler->display->display_options['menu']['weight'] = '-10';
+  $handler->display->display_options['menu']['name'] = 'user-menu';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
+  $handler->display->display_options['tab_options']['type'] = 'tab';
+  $handler->display->display_options['tab_options']['title'] = 'Friends';
+  $handler->display->display_options['tab_options']['weight'] = '0';
 
-  /* Display: Current user's Friends block */
-  $handler = $view->new_display('block', 'Current user\'s Friends block', 'block_1');
-  $handler->display->display_options['defaults']['items_per_page'] = FALSE;
-  $handler->display->display_options['defaults']['use_more'] = FALSE;
-  $handler->display->display_options['use_more'] = TRUE;
+  /* Display: Page: Pending Friends */
+  $handler = $view->new_display('page', 'Page: Pending Friends', 'page_1');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Pending Friends';
+  $handler->display->display_options['display_description'] = 'List of all pending friend relationships';
+  $handler->display->display_options['defaults']['access'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'flag_friend';
+  $handler->display->display_options['defaults']['empty'] = FALSE;
+  /* No results behavior: Global: Text area */
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = TRUE;
+  $handler->display->display_options['empty']['area']['content'] = 'No pending friends.';
+  $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: User: Picture */
+  $handler->display->display_options['fields']['picture']['id'] = 'picture';
+  $handler->display->display_options['fields']['picture']['table'] = 'users';
+  $handler->display->display_options['fields']['picture']['field'] = 'picture';
+  $handler->display->display_options['fields']['picture']['label'] = '';
+  $handler->display->display_options['fields']['picture']['element_label_colon'] = FALSE;
+  /* Field: User: Name */
+  $handler->display->display_options['fields']['name']['id'] = 'name';
+  $handler->display->display_options['fields']['name']['table'] = 'users';
+  $handler->display->display_options['fields']['name']['field'] = 'name';
+  $handler->display->display_options['fields']['name']['label'] = 'User';
+  $handler->display->display_options['fields']['name']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['name']['alter']['ellipsis'] = FALSE;
+  /* Field: Flags: Flag link */
+  $handler->display->display_options['fields']['ops']['id'] = 'ops';
+  $handler->display->display_options['fields']['ops']['table'] = 'flagging';
+  $handler->display->display_options['fields']['ops']['field'] = 'ops';
+  $handler->display->display_options['fields']['ops']['relationship'] = 'flag_content_rel';
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: User: Active */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'users';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+  /* Filter criterion: Flag friend: Relationship Status */
+  $handler->display->display_options['filters']['status_1']['id'] = 'status_1';
+  $handler->display->display_options['filters']['status_1']['table'] = 'flag_friend';
+  $handler->display->display_options['filters']['status_1']['field'] = 'status';
+  $handler->display->display_options['filters']['status_1']['relationship'] = 'flag_content_rel';
+  $handler->display->display_options['filters']['status_1']['value'] = '4';
+  $handler->display->display_options['path'] = 'user/%/friends/pending';
+  $handler->display->display_options['menu']['type'] = 'tab';
+  $handler->display->display_options['menu']['title'] = 'Pending Friends';
+  $handler->display->display_options['menu']['description'] = 'Pending Friend Requests';
+  $handler->display->display_options['menu']['weight'] = '0';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
+
+  /* Display: Page: Friend Requests */
+  $handler = $view->new_display('page', 'Page: Friend Requests', 'page_2');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Friend Requests';
+  $handler->display->display_options['display_description'] = 'Friends flagged by the current user';
+  $handler->display->display_options['defaults']['access'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'flag_friend';
+  $handler->display->display_options['defaults']['empty'] = FALSE;
+  /* No results behavior: Global: Text area */
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = TRUE;
+  $handler->display->display_options['empty']['area']['content'] = 'No friend requests.';
+  $handler->display->display_options['empty']['area']['format'] = 'filtered_html';
   $handler->display->display_options['defaults']['relationships'] = FALSE;
+  /* Relationship: Flags: User's flagged content */
+  $handler->display->display_options['relationships']['flag_user_content_rel']['id'] = 'flag_user_content_rel';
+  $handler->display->display_options['relationships']['flag_user_content_rel']['table'] = 'users';
+  $handler->display->display_options['relationships']['flag_user_content_rel']['field'] = 'flag_user_content_rel';
+  $handler->display->display_options['relationships']['flag_user_content_rel']['flag'] = 'friend';
+  /* Relationship: Flags: User */
+  $handler->display->display_options['relationships']['uid']['id'] = 'uid';
+  $handler->display->display_options['relationships']['uid']['table'] = 'flagging';
+  $handler->display->display_options['relationships']['uid']['field'] = 'uid';
+  $handler->display->display_options['relationships']['uid']['relationship'] = 'flag_user_content_rel';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
   $handler->display->display_options['fields']['name']['field'] = 'name';
-  $handler->display->display_options['fields']['name']['link_to_user'] = 1;
-  /* Field: Flag friend: Flag friend links */
-  $handler->display->display_options['fields']['uid']['id'] = 'uid';
-  $handler->display->display_options['fields']['uid']['table'] = 'flag_friend';
-  $handler->display->display_options['fields']['uid']['field'] = 'uid';
+  /* Field: User: Picture */
+  $handler->display->display_options['fields']['picture']['id'] = 'picture';
+  $handler->display->display_options['fields']['picture']['table'] = 'users';
+  $handler->display->display_options['fields']['picture']['field'] = 'picture';
+  /* Field: Flag friend: Friend Link */
+  $handler->display->display_options['fields']['friend_link']['id'] = 'friend_link';
+  $handler->display->display_options['fields']['friend_link']['table'] = 'flag_friend';
+  $handler->display->display_options['fields']['friend_link']['field'] = 'friend_link';
+  $handler->display->display_options['fields']['friend_link']['relationship'] = 'flag_user_content_rel';
   $handler->display->display_options['defaults']['arguments'] = FALSE;
-  /* Argument: Flag friend: Friends of */
-  $handler->display->display_options['arguments']['friend_uid']['id'] = 'friend_uid';
-  $handler->display->display_options['arguments']['friend_uid']['table'] = 'flag_friend';
-  $handler->display->display_options['arguments']['friend_uid']['field'] = 'friend_uid';
-  $handler->display->display_options['arguments']['friend_uid']['default_action'] = 'default';
-  $handler->display->display_options['arguments']['friend_uid']['style_plugin'] = 'default_summary';
-  $handler->display->display_options['arguments']['friend_uid']['default_argument_type'] = 'current_user';
-  $handler->display->display_options['arguments']['friend_uid']['break_phrase'] = 0;
-  $handler->display->display_options['arguments']['friend_uid']['not'] = 0;
-  $translatables['friends'] = array(
-    t('Defaults'),
-    t('more'),
-    t('Apply'),
-    t('Reset'),
-    t('Sort By'),
-    t('Asc'),
-    t('Desc'),
-    t('Items per page'),
-    t('- All -'),
-    t('Offset'),
-    t('No Friends have been added.'),
-    t('flag friend'),
-    t('Name'),
-    t('Flag link'),
-    t('Flag friend links'),
-    t('All'),
-    t('Page (friends)'),
-    t('Friends'),
-    t('Friend'),
-    t('Actions'),
-    t('Page (pending)'),
-    t('Friend Requests'),
-    t('These are users who would like to be your friend.'),
-    t('No Friend Requests.'),
-    t('User'),
-    t('Message'),
-    t('Page (flagged)'),
-    t('Awaiting Friend Approvals'),
-    t('These are users who you have requested to be friends with.'),
-    t('flag'),
-    t('Flag user'),
-    t('Current user\'s Friends block'),
-  );
+  /* Contextual filter: Flags: Content ID */
+  $handler->display->display_options['arguments']['entity_id']['id'] = 'entity_id';
+  $handler->display->display_options['arguments']['entity_id']['table'] = 'flagging';
+  $handler->display->display_options['arguments']['entity_id']['field'] = 'entity_id';
+  $handler->display->display_options['arguments']['entity_id']['relationship'] = 'flag_user_content_rel';
+  $handler->display->display_options['arguments']['entity_id']['default_action'] = 'not found';
+  $handler->display->display_options['arguments']['entity_id']['default_argument_type'] = 'fixed';
+  $handler->display->display_options['arguments']['entity_id']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['entity_id']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['entity_id']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['entity_id']['validate']['type'] = 'php';
+  $handler->display->display_options['arguments']['entity_id']['validate_options']['code'] = 'global $user;
+  if ($user->uid == $handler->argument) {
+  return TRUE;
+  } else {
+  return FALSE;
+  }';
+  $handler->display->display_options['arguments']['entity_id']['validate']['fail'] = 'access denied';
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: User: Active */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'users';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = '1';
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+  /* Filter criterion: Flag friend: Relationship Status */
+  $handler->display->display_options['filters']['status_1']['id'] = 'status_1';
+  $handler->display->display_options['filters']['status_1']['table'] = 'flag_friend';
+  $handler->display->display_options['filters']['status_1']['field'] = 'status';
+  $handler->display->display_options['filters']['status_1']['relationship'] = 'flag_user_content_rel';
+  $handler->display->display_options['filters']['status_1']['value'] = '4';
+  $handler->display->display_options['path'] = 'user/%/friends/flagged';
+  $handler->display->display_options['menu']['type'] = 'tab';
+  $handler->display->display_options['menu']['title'] = 'Friend Requests';
+  $handler->display->display_options['menu']['description'] = 'Friends you have flagged';
+  $handler->display->display_options['menu']['weight'] = '10';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
+
+  /* Display: Block: Friends */
+  $handler = $view->new_display('block', 'Block: Friends', 'block_1');
+  $handler->display->display_options['defaults']['pager'] = FALSE;
+  $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '5';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['pager']['options']['id'] = '0';
+  $handler->display->display_options['pager']['options']['quantity'] = '9';
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: User: Picture */
+  $handler->display->display_options['fields']['picture']['id'] = 'picture';
+  $handler->display->display_options['fields']['picture']['table'] = 'users';
+  $handler->display->display_options['fields']['picture']['field'] = 'picture';
+  $handler->display->display_options['fields']['picture']['label'] = '';
+  $handler->display->display_options['fields']['picture']['element_label_colon'] = FALSE;
+  /* Field: User: Name */
+  $handler->display->display_options['fields']['name']['id'] = 'name';
+  $handler->display->display_options['fields']['name']['table'] = 'users';
+  $handler->display->display_options['fields']['name']['field'] = 'name';
+  $handler->display->display_options['fields']['name']['relationship'] = 'uid';
+  $handler->display->display_options['fields']['name']['label'] = 'Requester';
+  $handler->display->display_options['fields']['name']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['name']['alter']['ellipsis'] = FALSE;
+  $handler->display->display_options['fields']['name']['element_label_colon'] = FALSE;
+  $handler->display->display_options['block_description'] = 'Flag Friend Friends';
   $views[$view->name] = $view;
   return $views;
 }

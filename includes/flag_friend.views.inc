@@ -6,28 +6,6 @@
  */
 
 /**
- * Implements hook_views_handlers().
- */
-function flag_friend_views_handlers() {
-  return array(
-    'info' => array(
-      'path' => drupal_get_path('module', 'flag_friend') . '/includes',
-    ),
-    'handlers' => array(
-      'flag_friend_handler_argument_numeric' => array(
-        'parent' => 'views_handler_argument_numeric',
-      ),
-      'flag_friend_handler_argument_apachesolr_friend' => array(
-        'parent' => 'apachesolr_views_handler_argument',
-      ),
-      'flag_friend_handler_field_links' => array(
-        'parent' => 'views_handler_field',
-      ),
-    ),
-  );
-}
-
-/**
  * Implements hook_views_data().
  */
 function flag_friend_views_data() {
@@ -35,29 +13,36 @@ function flag_friend_views_data() {
 
   // flag_friend table
   $data['flag_friend']['table']['group'] = t('Flag friend');
-  $data['flag_friend']['table']['join'] = array(
-    'users' => array(
-      'left_field' => 'uid',
-      'field' => 'uid',
-    ),
+
+  $data['flag_friend']['table']['join']['flagging'] = array(
+    'left_field' => 'flagging_id',
+    'field' => 'flagging_id',
+    'type' => 'INNER',
   );
 
-  $data['flag_friend']['uid'] = array(
-    'group' => t('Flag friend'),
-    'title' => t('Flag friend links'),
-    'help' => t('Remove/Deny links'),
-    'real field' => 'uid',
+  $data['flag_friend']['status'] = array(
+    'title' => t('Relationship Status'),
+    'help' => t('Display the status of the relationship, whether pending or approved'),
     'field' => array(
-      'handler' => 'flag_friend_handler_field_links',
+      'handler' => 'flag_friend_views_handler_field_status',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'flag_friend_views_handler_filter_status',
     ),
   );
 
-  // argument
-  $data['flag_friend']['friend_uid'] = array(
-    'title' => t('Friends of'),
-    'help' => t('Retrieve the friends of the user id given.'),
-    'argument' => array(
-      'handler' => 'flag_friend_handler_argument_numeric',
+  $data['flag_friend']['friend_link'] = array(
+    'title' => t('Friend Link'),
+    'help' => t('Flag Friend Link. Only used for creating links for users who have been flagged as by a friend'),
+    'field' => array(
+      'handler' => 'flag_friend_views_handler_field_links',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_user_current',
     ),
   );
 
@@ -79,7 +64,7 @@ function flag_friend_views_data() {
       'handler' => 'views_handler_argument_date',
     ),
   );
-
+/*
   // flag_friend_message table
   $data['flag_friend_message']['table']['group'] = t('Flag friend');
   $data['flag_friend_message']['table']['join'] = array(
@@ -97,7 +82,7 @@ function flag_friend_views_data() {
       'handler' => 'views_handler_field',
       'click sortable' => FALSE,
     ),
-  );
+  );*/
 
   // Add the flag relationship.
   // This basically just changes the 'base field' while reusing Flag's
@@ -111,8 +96,8 @@ function flag_friend_views_data() {
       'flag type' => 'user',
       'handler' => 'flag_handler_relationship_content',
       'label' => t('flag friend'),
-      'base' => 'flag_content',
-      'base field' => 'uid',
+      'base' => 'flagging',
+      'base field' => 'entity_id',
       'relationship field' => 'uid',
     ),
   );
@@ -134,4 +119,19 @@ function flag_friend_views_data_alter(&$data) {
       ),
     );
   }
+}
+
+/**
+ * Implements hook_views_plugins
+ */
+function flag_friend_views_plugins() {
+  return array(
+    'access' => array(
+      'flag_friend' => array(
+        'title' => t('Restrict Flag Friend Pending and Requests Access'),
+        'help' => t('Creates a custom access check to see if a user is looking at their own account.'),
+        'handler' => 'flag_friend_plugin_access_pending_requested',
+      ),
+    ),
+  );
 }

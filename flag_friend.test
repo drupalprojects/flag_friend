@@ -6,10 +6,10 @@
  */
 
 class FlagFriendUserTestCase extends DrupalWebTestCase {
-  protected $admin_user;
-  protected $user_a;
-  protected $user_b;
-  protected $user_c;
+  var $admin_user;
+  var $user_a;
+  var $user_b;
+  var $user_c;
 
   public static function getInfo() {
     return array(
@@ -135,7 +135,7 @@ class FlagFriendUserTestCase extends DrupalWebTestCase {
     $this->drupalGet('user/' . $this->user_c->uid);
     $this->assertText(t('Add friend'));
     // User A unfriends User B.
-    $this->drupalPost('flag/confirm/unfriend/friend/' . $this->user_b->uid, array(), t('Confirm'));
+    $this->drupalPost('flag/confirm/unflag/friend/' . $this->user_b->uid, array(), t('Confirm'));
     // Verify that User B is no longer a friend of User A.
     $this->drupalGet('user/' . $this->user_b->uid);
     $this->assertText(t('Add friend'));
@@ -179,20 +179,22 @@ class FlagFriendViewsTestCase extends FlagFriendUserTestCase {
     $this->assertText(t('Remove friend'));
     $this->assertNoText($this->user_c->name);
     // Show awaiting approvals. Should only be User C.
-    $this->drupalGet('user/' . $this->user_a->uid . '/friends/flagged');
+    $this->drupalGet('user/' . $this->user_a->uid . '/friends/pending');
     $this->assertText($this->user_c->name);
     $this->assertText(t('Friend Requested. Cancel?'));
     $this->assertNoText($this->user_b->name);
     // Show friend requests. Should be nobody.
-    $this->drupalGet('user/' . $this->user_a->uid . '/friends/pending');
+    $this->drupalGet('user/' . $this->user_a->uid . '/friends/flagged');
     $this->assertNoText($this->user_b->name);
     $this->assertNoText($this->user_c->name);
     // Show User B's friend list. Should only be User A.
+    $this->drupalLogin($this->user_b);
     $this->drupalGet('user/' . $this->user_b->uid . '/friends');
     $this->assertText($this->user_a->name);
-    $this->assertNoText(t('Remove friend'));
+    $this->assertText(t('Remove friend'));
     $this->assertNoText($this->user_c->name);
     // Show User C's friend list. Should be nobody.
+    $this->drupalLogin($this->user_c);
     $this->drupalGet('user/' . $this->user_c->uid . '/friends');
     $this->assertNoText($this->user_a->name);
     $this->assertNoText($this->user_b->name);
@@ -205,21 +207,23 @@ class FlagFriendViewsTestCase extends FlagFriendUserTestCase {
     $this->assertText(t('Remove friend'));
     $this->assertNoText($this->user_c->name);
     // Show awaiting approvals. Should be nobody.
-    $this->drupalGet('user/' . $this->user_b->uid . '/friends/flagged');
+    $this->drupalGet('user/' . $this->user_b->uid . '/friends/pending');
     $this->assertNoText($this->user_c->name);
     $this->assertNoText($this->user_a->name);
     // Show friend requests. Should only be User C.
-    $this->drupalGet('user/' . $this->user_b->uid . '/friends/pending');
+    $this->drupalGet('user/' . $this->user_b->uid . '/friends/flagged');
     $this->assertText($this->user_c->name);
     $this->assertText(t('Approve'));
     $this->assertText(t('Deny'));
     $this->assertNoText($this->user_a->name);
     // Show User A's friend list. Should only be User B.
+    $this->drupalLogin($this->user_a);
     $this->drupalGet('user/' . $this->user_a->uid . '/friends');
     $this->assertText($this->user_b->name);
-    $this->assertNoText(t('Remove friend'));
+    $this->assertText(t('Remove friend'));
     $this->assertNoText($this->user_c->name);
     // Show User C's friend list. Should be nobody.
+    $this->drupalLogin($this->user_c);
     $this->drupalGet('user/' . $this->user_c->uid . '/friends');
     $this->assertNoText($this->user_a->name);
     $this->assertNoText($this->user_b->name);
@@ -231,25 +235,27 @@ class FlagFriendViewsTestCase extends FlagFriendUserTestCase {
     $this->assertNoText($this->user_a->name);
     $this->assertNoText($this->user_b->name);
     // Show awaiting approvals. Should only be User B.
-    $this->drupalGet('user/' . $this->user_c->uid . '/friends/flagged');
+    $this->drupalGet('user/' . $this->user_c->uid . '/friends/pending');
     $this->assertText($this->user_b->name);
     $this->assertText(t('Friend Requested. Cancel?'));
     $this->assertNoText($this->user_a->name);
     // Show friend requests. Should only be User A.
-    $this->drupalGet('user/' . $this->user_c->uid . '/friends/pending');
+    $this->drupalGet('user/' . $this->user_c->uid . '/friends/flagged');
     $this->assertText($this->user_a->name);
     $this->assertText(t('Approve'));
     $this->assertText(t('Deny'));
     $this->assertNoText($this->user_b->name);
     // Show User A's friend list. Should only be User B.
+    $this->drupalLogin($this->user_a);
     $this->drupalGet('user/' . $this->user_a->uid . '/friends');
     $this->assertText($this->user_b->name);
-    $this->assertNoText(t('Remove friend'));
+    $this->assertText(t('Remove friend'));
     $this->assertNoText($this->user_c->name);
     // Show User B's friend list. Should only be User A.
+    $this->drupalLogin($this->user_b);
     $this->drupalGet('user/' . $this->user_b->uid . '/friends');
     $this->assertText($this->user_a->name);
-    $this->assertNoText(t('Remove friend'));
+    $this->assertText(t('Remove friend'));
     $this->assertNoText($this->user_c->name);
   }
 }
