@@ -1,6 +1,6 @@
 name = Flag friend
 description = Flag users as friends. Implements it's own flag and a form for sending a user a message upon flag.
-dependencies[] = flag (>=3.0)
+dependencies[] = flag (2.x)
 core = 7.x
 package = Flags
 files[] = flag_friend.install
