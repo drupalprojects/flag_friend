@@ -62,26 +62,7 @@ function flag_friend_page($action, $flag, $entity_id) {
       // user account to pass to into hook_flag
       $flagging_id = db_query("SELECT flagging_id FROM {flag_friend} WHERE entity_id = :entity_id AND uid = :uid", array(':entity_id' => $user->uid, ':uid' => $entity_id))->fetchField();
       $account = user_load($entity_id);
-      flag_friend_flag('unflag', $flag, $user->uid, $account, $flagging_id, $_REQUEST['token']);
-    }
-  }
-}
-
-/**
- * Implements hook_flag().
- *
- * We've added a $token param which is passed in if the function is called from flag_friend_page,
- * our override for flag_page in case a deny function is clicked.
- *
- * @see flag_friend_flag_flag(), flag_friend_flag_unflag()
- */
-function flag_friend_flag($op, $flag, $entity_id, $account, $flagging_id, $token = NULL) {
-  if ($flag->name == 'friend') {
-    if ($op == 'flag') {
-      flag_friend_flag_flag($flag, $entity_id, $account, $flagging_id, $token);
-    }
-    elseif ($op == 'unflag') {
-      flag_friend_flag_unflag($flag, $entity_id, $account, $flagging_id, $token);
+      flag_friend_flag_unflag($flag, $user->uid, $account, $flagging_id, $_REQUEST['token']);
     }
   }
 }
@@ -98,74 +79,76 @@ function flag_friend_flag($op, $flag, $entity_id, $account, $flagging_id, $token
  * @param null $token
  */
 function flag_friend_flag_flag($flag, $entity_id, $account, $flagging, $token = NULL) {
-  // See the status of the friendship.
-  $status = flag_friend_determine_friend_status($flag, $entity_id, $account->uid, TRUE);
-  $friend_account = user_load($entity_id);
+  if ($flag->name == 'friend') {
+    // See the status of the friendship.
+    $status = flag_friend_determine_friend_status($flag, $entity_id, $account->uid, TRUE);
+    $friend_account = user_load($entity_id);
 
-  // FLAG_FRIEND_UNFLAGGED -- need to add a pending relationship
-  if ($status === FLAG_FRIEND_UNFLAGGED) {
-    // Insert new entry into the flag friend table.
-    $result = db_insert('flag_friend')
-      ->fields(array(
-        'flagging_id' => $flagging->flagging_id,
-        'status' => FLAG_FRIEND_PENDING,
-        'created' => REQUEST_TIME,
-        'uid' => $account->uid,
-        'entity_id' => $entity_id,
-      ))->execute();
+    // FLAG_FRIEND_UNFLAGGED -- need to add a pending relationship
+    if ($status === FLAG_FRIEND_UNFLAGGED) {
+      // Insert new entry into the flag friend table.
+      $result = db_insert('flag_friend')
+        ->fields(array(
+          'flagging_id' => $flagging->flagging_id,
+          'status' => FLAG_FRIEND_PENDING,
+          'created' => REQUEST_TIME,
+          'uid' => $account->uid,
+          'entity_id' => $entity_id,
+        ))->execute();
 
-    // Invoke rules for the new friend relationship.
-    if (function_exists('rules_invoke_event_by_args')) {
-      rules_invoke_event_by_args('flag_friend_request', array(
-        'receiving_user' => $entity_id,
-        'requesting_user' => $account,
-      ));
+      // Invoke rules for the new friend relationship.
+      if (function_exists('rules_invoke_event_by_args')) {
+        rules_invoke_event_by_args('flag_friend_request', array(
+          'receiving_user' => $entity_id,
+          'requesting_user' => $account,
+        ));
+      }
+
+      // Invoke triggers.
+      module_invoke_all('flag_friend', 'request', $entity_id, $account, $flag);
+    }
+    elseif ($status === FLAG_FRIEND_APPROVAL) {
+      // FLAG_FRIEND_APPROVAL -- Need to approve an existing friendship.
+      // User B has already flagged the current user A. Now A is approving the
+      // relationship by flagging B back.
+
+      // Insert the current user's flagging into the flag friend table.
+      $result = db_insert('flag_friend')
+        ->fields(array(
+          'flagging_id' => $flagging->flagging_id,
+          'status' => FLAG_FRIEND_FLAGGED,
+          'created' => REQUEST_TIME,
+          'uid' => $account->uid,
+          'entity_id' => $entity_id,
+        ))->execute();
+
+      // Query the database for user B's flagging.
+      $flagging_id2 = db_query("SELECT flagging_id FROM {flag_friend} WHERE entity_id = :account AND uid = :entity_id", array(':account' => $account->uid, ':entity_id' => $entity_id))->fetchField();
+
+      // Update user B's flagging in the flag friend table.
+      $query = db_update('flag_friend')
+        ->fields(array('status' => FLAG_FRIEND_FLAGGED))
+        ->condition(db_and()
+          ->condition('flagging_id', $flagging_id2)
+          ->condition('status', FLAG_FRIEND_PENDING))
+        ->execute();
+
+      // Remove any message entries for either user.
+      flag_friend_message('unflag', $flag, $account->uid, $entity_id);
+      flag_friend_message('unflag', $flag, $entity_id, $account->uid);
+
+      // Invoke rules for the approved relationship.
+      if (function_exists('rules_invoke_event_by_args')) {
+        rules_invoke_event_by_args('flag_friend_approve', array(
+          'approving_user' => $account,
+          'requesting_user' => $entity_id,
+        ));
+      }
     }
 
-    // Invoke triggers.
-    module_invoke_all('flag_friend', 'request', $entity_id, $account, $flag);
+    // fire btrigger
+    module_invoke_all('flag_friend', 'approve', $entity_id, $account, $flag);
   }
-  elseif ($status === FLAG_FRIEND_APPROVAL) {
-    // FLAG_FRIEND_APPROVAL -- Need to approve an existing friendship.
-    // User B has already flagged the current user A. Now A is approving the
-    // relationship by flagging B back.
-
-    // Insert the current user's flagging into the flag friend table.
-    $result = db_insert('flag_friend')
-      ->fields(array(
-        'flagging_id' => $flagging->flagging_id,
-        'status' => FLAG_FRIEND_FLAGGED,
-        'created' => REQUEST_TIME,
-        'uid' => $account->uid,
-        'entity_id' => $entity_id,
-      ))->execute();
-
-    // Query the database for user B's flagging.
-    $flagging_id2 = db_query("SELECT flagging_id FROM {flag_friend} WHERE entity_id = :account AND uid = :entity_id", array(':account' => $account->uid, ':entity_id' => $entity_id))->fetchField();
-
-    // Update user B's flagging in the flag friend table.
-    $query = db_update('flag_friend')
-      ->fields(array('status' => FLAG_FRIEND_FLAGGED))
-      ->condition(db_and()
-        ->condition('flagging_id', $flagging_id2)
-        ->condition('status', FLAG_FRIEND_PENDING))
-      ->execute();
-
-    // Remove any message entries for either user.
-    flag_friend_message('unflag', $flag, $account->uid, $entity_id);
-    flag_friend_message('unflag', $flag, $entity_id, $account->uid);
-
-    // Invoke rules for the approved relationship.
-    if (function_exists('rules_invoke_event_by_args')) {
-      rules_invoke_event_by_args('flag_friend_approve', array(
-        'approving_user' => $account,
-        'requesting_user' => $entity_id,
-      ));
-    }
-  }
-
-  // fire btrigger
-  module_invoke_all('flag_friend', 'approve', $entity_id, $account, $flag);
 }
 
 /**
@@ -178,77 +161,79 @@ function flag_friend_flag_flag($flag, $entity_id, $account, $flagging, $token = 
  * @param null $token
  */
 function flag_friend_flag_unflag($flag, $entity_id, $account, $flagging, $token = NULL) {
-  // Get the friend status.
-  $status = flag_friend_determine_friend_status($flag, $entity_id, $account->uid, TRUE);
+  if ($flag->name == 'friend') {
+    // Get the friend status.
+    $status = flag_friend_determine_friend_status($flag, $entity_id, $account->uid, TRUE);
 
-  $fids = array($flagging->flagging_id);
+    $fids = array($flagging->flagging_id);
 
-  foreach (flag_friend_get_flags($flag, $entity_id, $account->uid, $reset = NULL) as $current_flagging) {
-    if ($current_flagging->flagging_id != $flagging->flagging_id) {
-      // We need to delete the reciprocal flag in the flagging table.
-      // This should be done via the $flag object to ensure the hooks are fired
-      // but it didn't seem to work.
-      $friend_delete = db_delete('flagging')
-        ->condition('flagging_id', $current_flagging->flagging_id)
-        ->execute();
+    foreach (flag_friend_get_flags($flag, $entity_id, $account->uid, $reset = NULL) as $current_flagging) {
+      if ($current_flagging->flagging_id != $flagging->flagging_id) {
+        // We need to delete the reciprocal flag in the flagging table.
+        // This should be done via the $flag object to ensure the hooks are fired
+        // but it didn't seem to work.
+        $friend_delete = db_delete('flagging')
+          ->condition('flagging_id', $current_flagging->flagging_id)
+          ->execute();
 
-      $fids[] = $current_flagging->flagging_id;
+        $fids[] = $current_flagging->flagging_id;
+      }
     }
-  }
 
-  $num_deleted = db_delete('flag_friend')
-    ->condition('flagging_id', $fids, 'IN')
-    ->execute();
+    $num_deleted = db_delete('flag_friend')
+      ->condition('flagging_id', $fids, 'IN')
+      ->execute();
 
-  // If this function is being called by flag_friend_page, our deny link
-  // we need to mimic the flag module behaviour. This is taken from the
-  // flag module flag_page function.
-  if ($token) {
-    global $user;
-    // Shorten up the variables that affect the behavior of this page.
-    $js = isset($_REQUEST['js']);
+    // If this function is being called by flag_friend_page, our deny link
+    // we need to mimic the flag module behaviour. This is taken from the
+    // flag module flag_page function.
+    if ($token) {
+      global $user;
+      // Shorten up the variables that affect the behavior of this page.
+      $js = isset($_REQUEST['js']);
 
-    // Specifically $_GET to avoid getting the $_COOKIE variable by the same key.
-    $has_js = isset($_GET['has_js']);
+      // Specifically $_GET to avoid getting the $_COOKIE variable by the same key.
+      $has_js = isset($_GET['has_js']);
 
-    // Check the flag token, then perform the flagging.
-    // This is different from flag module in that we are passing the
-    // account uid as the $entity_id. This is because the situation is reversed
-    // since the user acting on the flag is the actual $entity_id and not the
-    // owner of the flag.
-    if (!flag_check_token($token, $account->uid)) {
-      $error = t('Bad token. You seem to have followed an invalid link.') . ' ' . $token;
-    }
-    elseif ($user->uid == 0 && !$has_js) {
-      $error = t('You must have JavaScript and cookies enabled in your browser to flag content.');
-    }
-    // If an error was received, set a message and exit.
-    if (isset($error)) {
+      // Check the flag token, then perform the flagging.
+      // This is different from flag module in that we are passing the
+      // account uid as the $entity_id. This is because the situation is reversed
+      // since the user acting on the flag is the actual $entity_id and not the
+      // owner of the flag.
+      if (!flag_check_token($token, $account->uid)) {
+        $error = t('Bad token. You seem to have followed an invalid link.') . ' ' . $token;
+      }
+      elseif ($user->uid == 0 && !$has_js) {
+        $error = t('You must have JavaScript and cookies enabled in your browser to flag content.');
+      }
+      // If an error was received, set a message and exit.
+      if (isset($error)) {
+        if ($js) {
+          drupal_add_http_header('Content-Type', 'text/javascript; charset=utf-8');
+          print drupal_json_encode(array(
+            'status' => FALSE,
+            'errorMessage' => $error,
+          ));
+          drupal_exit();
+        }
+        else {
+          drupal_set_message($error);
+          drupal_access_denied();
+          return;
+        }
+      }
+
+      // If successful, return data according to the request type.
       if ($js) {
         drupal_add_http_header('Content-Type', 'text/javascript; charset=utf-8');
-        print drupal_json_encode(array(
-          'status' => FALSE,
-          'errorMessage' => $error,
-        ));
+        $flag->link_type = 'toggle';
+        print drupal_json_encode(flag_build_javascript_info($flag, $account->uid));
         drupal_exit();
       }
       else {
-        drupal_set_message($error);
-        drupal_access_denied();
-        return;
+        drupal_set_message($flag->get_label('unflag_message', $entity_id));
+        drupal_goto();
       }
-    }
-
-    // If successful, return data according to the request type.
-    if ($js) {
-      drupal_add_http_header('Content-Type', 'text/javascript; charset=utf-8');
-      $flag->link_type = 'toggle';
-      print drupal_json_encode(flag_build_javascript_info($flag, $account->uid));
-      drupal_exit();
-    }
-    else {
-      drupal_set_message($flag->get_label('unflag_message', $entity_id));
-      drupal_goto();
     }
   }
 }
