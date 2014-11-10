@@ -1,0 +1,8 @@
+# Ignore IDE project directories
+.idea
+
+# Ignore patches
+*.patch
+
+#Ignore vi swap files
+*.swp
