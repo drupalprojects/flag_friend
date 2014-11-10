@@ -82,6 +82,7 @@ function flag_friend_links_get_link_values($account = NULL) {
     $flag_status = flag_friend_determine_friend_status($flag, $user->uid, $account->uid);
 
     switch ($flag_status) {
+      case (FLAG_FRIEND_BOTH):
       case (FLAG_FRIEND_FLAGGED):
         // Remove friend
         return l(t('Remove friend'), "flag/confirm/unfriend/friend/$account->uid", array('query' => drupal_get_destination()));
