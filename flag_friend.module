@@ -45,7 +45,7 @@ function flag_friend_menu_alter(&$items) {
  *  The entity ID being flagged.
  */
 function flag_friend_page($action, $flag, $entity_id) {
-  if ($action != 'unflag') {
+  if ($flag->name != 'friend' || $action != 'unflag') {
     // we only want to alter unflagging
     flag_page($action, $flag, $entity_id);
   }
