@@ -6,7 +6,6 @@ package = Flags
 files[] = flag_friend.install
 files[] = flag_friend.module
 files[] = flag_friend.test
-files[] = includes/flag_friend.rules.inc
 files[] = includes/flag_friend.views.inc
 files[] = includes/flag_friend.views_default.inc
 files[] = includes/flag_friend_handler_argument_apachesolr_friend.inc
