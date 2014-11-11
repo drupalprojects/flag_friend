@@ -183,7 +183,12 @@ function flag_friend_flag_unflag($flag, $entity_id, $account, $flagging, $token 
 
   $fids = array($flagging->flagging_id);
 
-  foreach (flag_friend_get_flags($flag, $entity_id, $account->uid, $reset = NULL) as $current_flagging) {
+  $flags = flag_friend_get_flags($flag, $entity_id, $account->uid, $reset = NULL);
+
+  foreach ($flags as $current_flagging) {
+    // If count = 2 then the action is "remove friend".
+    $flag_count = count($flags);
+
     if ($current_flagging->flagging_id != $flagging->flagging_id) {
       // We need to delete the reciprocal flag in the flagging table.
       // This should be done via the $flag object to ensure the hooks are fired
@@ -193,6 +198,21 @@ function flag_friend_flag_unflag($flag, $entity_id, $account, $flagging, $token 
         ->execute();
 
       $fids[] = $current_flagging->flagging_id;
+
+      if (function_exists('rules_invoke_event_by_args') && $flag_count != 2) {
+        // Trigger rule when someone denies a friend request.
+        rules_invoke_event_by_args('flag_friend_denied', array(
+          'receiving_user' => $entity_id,
+          'requesting_user' => $account,
+        ));
+      }
+    }
+    else if (function_exists('rules_invoke_event_by_args') && $flag_count != 2) {
+      // Trigger rule when someone cancel a friend request.
+      rules_invoke_event_by_args('flag_friend_cancelled', array(
+        'receiving_user' => $entity_id,
+        'requesting_user' => $account,
+      ));
     }
   }
 
@@ -252,7 +272,6 @@ function flag_friend_flag_unflag($flag, $entity_id, $account, $flagging, $token 
     }
   }
 }
-
 /**
  * Implements hook_init().
  */
@@ -354,6 +373,34 @@ function flag_friend_rules_event_info() {
     ),
     'flag_friend_request' => array(
       'label' => t('Friendship is requested'),
+      'group' => t('Flag friend'),
+      'variables' => array(
+        'receiving_user' => array(
+          'type' => 'user',
+          'label' => t('Receiving user'),
+        ),
+        'requesting_user' => array(
+          'type' => 'user',
+          'label' => t('Requesting user'),
+        ),
+      ),
+    ),
+    'flag_friend_denied' => array(
+      'label' => t('Friend request is denied'),
+      'group' => t('Flag friend'),
+      'variables' => array(
+        'receiving_user' => array(
+          'type' => 'user',
+          'label' => t('Receiving user'),
+        ),
+        'requesting_user' => array(
+          'type' => 'user',
+          'label' => t('Requesting user'),
+        ),
+      ),
+    ),
+    'flag_friend_cancelled' => array(
+      'label' => t('Friend request is cancelled'),
       'group' => t('Flag friend'),
       'variables' => array(
         'receiving_user' => array(
