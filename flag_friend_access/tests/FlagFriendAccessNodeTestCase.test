@@ -1,0 +1,107 @@
+<?php
+/**
+ * @file
+ * Contains Flag Friend Access tests.
+ */
+
+// Include the FlagFriendTestBase class so run-tests.sh doesn't choke.
+require_once(drupal_get_path('module', 'flag_friend') . '/tests/FlagFriendTestBase.test');
+
+/**
+ * Tests friend access control for nodes.
+ */
+class FlagFriendAccessNodeTestCase extends FlagFriendTestBase {
+
+  /**
+   * {@inheritdoc]
+   */
+  public static function getInfo(){
+    return array(
+      'name' => 'Flag Friend Access Nodes',
+      'description' => 'Tests friend access control for nodes.',
+      'group' => 'Flag Friend',
+    );
+  }
+
+  /**
+   * Test if the access field appears on the node form.
+   */
+  public function testAccessForm() {
+    // Log in as User A.
+    $this->drupalLogin($this->user_a);
+
+    // Go to the node add page.
+    $this->drupalGet('node/add/article');
+
+    $this->assertText('Friend Access Control');
+    $this->assertFieldById('edit-flag-friend-access-0', 0);
+    $this->assertFieldById('edit-flag-friend-access-1', 1);
+    $this->assertFieldById('edit-flag-friend-access-2', 2);
+    $this->assertFieldChecked('edit-flag-friend-access-0');
+    $this->assertNoFieldChecked('edit-flag-friend-access-1');
+    $this->assertNoFieldChecked('edit-flag-friend-access-2');
+  }
+
+  /**
+   * Create a private node and test friend access to it.
+   */
+  public function testPrivateNode() {
+    $random_title = $this->randomName();
+
+    // Log in as User B.
+    $this->drupalLogin($this->user_b);
+
+    // Create the node.
+    $edit = array(
+      'title' => $random_title,
+      'body[und][0][value]' => $this->randomString(512),
+      'flag_friend_access' => '2', // FLAG_FRIEND_ACCESS_PRIVATE
+    );
+    $this->drupalPost('node/add/article', $edit, t('Save'));
+    $node_url = $this->getUrl();
+
+    // Check if the node was properly marked private.
+    $this->drupalGet($node_url . '/edit');
+    $this->assertFieldChecked('edit-flag-friend-access-2');
+
+    // User C isn't a friend of B, and should be denied access.
+    $this->drupalLogin($this->user_c);
+    $this->drupalGet($node_url);
+    $this->assertNoText($random_title);
+
+    // User A is a friend B, but the post is private so denied.
+    $this->drupalLogin($this->user_a);
+    $this->drupalGet($node_url);
+    $this->assertNoText($random_title);
+  }
+
+  public function testFriendOnlyNode() {
+    $random_title = $this->randomName();
+
+    // Log in as User B.
+    $this->drupalLogin($this->user_b);
+
+    // Create node.
+    $edit = array(
+      'title' => $random_title,
+      'body[und][0][value]' => $this->randomString(512),
+      'flag_friend_access' => '1', // FLAG_FRIEND_ACCESS_FRIENDS_ONLY
+    );
+    $this->drupalPost('node/add/article', $edit, t('Save'));
+    $node_url = $this->getUrl();
+
+    // Check if the node was properly marked friends only.
+    $this->drupalGet($node_url . '/edit');
+    $this->assertFieldChecked('edit-flag-friend-access-1');
+
+    // B has A as a friend, so A should see the post.
+    $this->drupalLogin($this->user_a);
+    $this->drupalGet($node_url);
+    $this->assertText($random_title);
+
+    // User C is not friends of B shouldn't see anything.
+    $this->drupalLogin($this->user_c);
+    $this->drupalGet($node_url);
+    $this->assertNoText($random_title);
+  }
+}

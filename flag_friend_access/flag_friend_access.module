@@ -5,37 +5,59 @@
  * have access to it
  */
 
+define('FLAG_FRIEND_ACCESS_PUBLIC', 0);
+define('FLAG_FRIEND_ACCESS_FRIENDS_ONLY', 1);
+define('FLAG_FRIEND_ACCESS_PRIVATE', 2);
+
 /**
  * Implements hook_node_grants().
  */
 function flag_friend_access_node_grants($account, $op) {
-  // module only controls view operations
+  $grants = array();
+
+  if (!empty($account->uid)) {
+    $grants['flag_friend_author'] = array($account->uid);
+  }
+
   if ($op == 'view') {
     $friends = flag_friend_get_friends($account->uid);
     if (!empty($friends)) {
       $grants['flag_friend'] = array_keys($friends);
     }
-    $grants['flag_friend'][] = $account->uid;
-    return $grants;
   }
+
+  return $grants;
 }
 
 /**
  * Implements hook_node_access_records().
  */
 function flag_friend_access_node_access_records($node) {
+  $records = array();
+
   if (!empty($node->flag_friend_access)) {
-    return array(
-      array(
-        'realm' => 'flag_friend',
-        'gid' => $node->uid,
-        'grant_view' => 1,
-        'grant_update' => 0,
-        'grant_delete' => 0,
-        'priority' => 5,
-      ),
+    $records[] = array(
+      'realm' => 'flag_friend_author',
+      'gid' => $node->uid,
+      'grant_view' => 1,
+      'grant_update' => 1,
+      'grant_delete' => 1,
+      'priority' => 5,
     );
   }
+
+  if ($node->flag_friend_access == FLAG_FRIEND_ACCESS_FRIENDS_ONLY) {
+    $records[] = array(
+      'realm' => 'flag_friend',
+      'gid' => $node->uid,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 5,
+    );
+  }
+
+  return $records;
 }
 
 /**
@@ -52,9 +74,14 @@ function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
     );
     $access_value = isset($form['#node']->nid) ? flag_friend_access_value($form['#node']->nid) : FALSE;
     $form['flag_friend_control']['flag_friend_access'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Only My Friends'),
-      '#default_value' => !empty($access_value),
+      '#type' => 'radios',
+      '#title' => t('Who can see this post?'),
+      '#options' => array(
+        FLAG_FRIEND_ACCESS_PUBLIC => t('Everyone'),
+        FLAG_FRIEND_ACCESS_FRIENDS_ONLY => t('Only my friends'),
+        FLAG_FRIEND_ACCESS_PRIVATE => t('Just me'),
+      ),
+      '#default_value' => !empty($access_value) ? $access_value : FLAG_FRIEND_ACCESS_PUBLIC,
     );
   }
 }
@@ -69,7 +96,7 @@ function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
  *  Whether or not to reset the static cache.
  *
  * @return
- *   User id.
+ *   The node access status.
  *
  */
 function flag_friend_access_value($nid, $reset = FALSE) {
@@ -80,7 +107,9 @@ function flag_friend_access_value($nid, $reset = FALSE) {
   }
 
   if (!isset($nodes[$nid])) {
-    $nodes[$nid] = db_query('SELECT uid FROM {flag_friend_access} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
+    // Note that when there's no access record, fetchField() returns FALSE.
+    // And FALSE is 0 in PHP, and 0 is FLAG_FRIEND_ACCESS_PUBLIC.
+    $nodes[$nid] = db_query('SELECT status FROM {flag_friend_access} WHERE nid = :nid', array(':nid' => $nid))->fetchField();
   }
 
   return $nodes[$nid];
@@ -99,34 +128,47 @@ function flag_friend_access_node_load($nodes, $types) {
  * Implements hook_node_insert().
  */
 function flag_friend_access_node_insert($node) {
-  if (isset($node->flag_friend_access) && ($node->flag_friend_access == 1)) {
-    $id = db_insert('flag_friend_access')
-  ->fields(array(
-    'uid' => $node->uid,
-    'nid' => $node->nid,
-  ))
-  ->execute();
+  $status = FLAG_FRIEND_ACCESS_PUBLIC;
+
+  if ($node->flag_friend_access == FLAG_FRIEND_ACCESS_FRIENDS_ONLY) {
+    $status = FLAG_FRIEND_ACCESS_FRIENDS_ONLY;
   }
+  elseif ($node->flag_friend_access == FLAG_FRIEND_ACCESS_PRIVATE) {
+    $status = FLAG_FRIEND_ACCESS_PRIVATE;
+  }
+
+  $id = db_insert('flag_friend_access')
+    ->fields(array(
+      'uid' => $node->uid,
+      'nid' => $node->nid,
+      'status' => $status,
+    ))
+    ->execute();
 }
 
 /**
  * Implements hook_node_update().
  */
 function flag_friend_access_node_update($node) {
-  $existing_access = flag_friend_access_value($node->nid);
-  if (empty($node->flag_friend_access) && !empty($existing_access)) {
-    db_delete('flag_friend_access')
-  ->condition('nid', $node->nid)
-  ->execute();
-    node_access_acquire_grants($node);
+  $status = FLAG_FRIEND_ACCESS_PUBLIC;
+
+  if ($node->flag_friend_access == FLAG_FRIEND_ACCESS_FRIENDS_ONLY) {
+    $status = FLAG_FRIEND_ACCESS_FRIENDS_ONLY;
   }
-  elseif (!empty($node->flag_friend_access) && empty($existing_access)) {
-    $id = db_insert('flag_friend_access')
-  ->fields(array(
-    'uid' => $node->uid,
-    'nid' => $node->nid,
-  ))
-  ->execute();
+  elseif ($node->flag_friend_access == FLAG_FRIEND_ACCESS_PRIVATE) {
+    $status = FLAG_FRIEND_ACCESS_PRIVATE;
+  }
+
+  if ($status != flag_friend_access_value($node->nid)) {
+    db_merge('flag_friend_access')
+      ->key(array('nid' => $node->nid))
+      ->fields(array(
+        'uid' => $node->uid,
+        'nid' => $node->nid,
+        'status' => $status,
+      ))
+      ->execute();
+
     node_access_acquire_grants($node);
   }
 }

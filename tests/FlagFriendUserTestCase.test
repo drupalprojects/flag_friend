@@ -1,0 +1,93 @@
+<?php
+/**
+ * @file
+ * Contains FlagFriendUserTestCase.
+ */
+
+/**
+ * Test friending and un-friending of other users.
+ */
+class FlagFriendUserTestCase extends FlagFriendTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Flag Friend Users',
+      'description' => 'Test friending and un-friending of other users.',
+      'group' => 'Flag Friend',
+    );
+  }
+
+  /**
+   * Tests requested friendships, granting, and denying friendship requests.
+   */
+  public function testAddAndRemoveFriends() {
+    // Make sure the last mail was sent to User B.
+    $this->assertMail('to', $this->user_b->mail);
+    $this->assertMailString('body', t('Can I be your friend?'), 1);
+
+    // Verify all friends and requests.
+
+    // Log in as User A.
+    $this->drupalLogin($this->user_a);
+    // User B should be a friend of User A.
+    $this->drupalGet('user/' . $this->user_b->uid);
+    $this->assertText(t('Remove friend'));
+    // User C should have been sent a friend request from User A.
+    $this->drupalGet('user/' . $this->user_c->uid);
+    $this->assertText(t('Friend Requested. Cancel?'));
+
+    // Log in as User B.
+    $this->drupalLogin($this->user_b);
+    // User A should be a friend of User B.
+    $this->drupalGet('user/' . $this->user_a->uid);
+    $this->assertText(t('Remove friend'));
+    // User C should have requested a friendship with User B.
+    $this->drupalGet('user/' . $this->user_c->uid);
+    $this->assertText(t('Approve'));
+    $this->assertText(t('Deny'));
+
+    // Log in as User C.
+    $this->drupalLogin($this->user_c);
+    // User A should have requested a friendship with User C.
+    $this->drupalGet('user/' . $this->user_a->uid);
+    $this->assertText(t('Approve'));
+    $this->assertText(t('Deny'));
+    // User B should have should have been sent a friend request from User C.
+    $this->drupalGet('user/' . $this->user_b->uid);
+    $this->assertText(t('Friend Requested. Cancel?'));
+
+    // User C denies friend request from User A.
+    $this->drupalPost('flag/confirm/unflag/friend/' . $this->user_a->uid, array(), t('Confirm'));
+    // Verify that User A's request is no longer visible.
+    $this->drupalGet('user/' . $this->user_a->uid);
+    $this->assertText(t('Add friend'));
+    // Cancel friend request to User B.
+    $this->drupalPost('flag/confirm/unflag/friend/' . $this->user_b->uid, array(), t('Confirm'));
+    // Verify that requst to User B is cancelled.
+    $this->drupalGet('user/' . $this->user_b->uid);
+    $this->assertText(t('Add friend'));
+
+    // Log in as User A.
+    $this->drupalLogin($this->user_a);
+    // Verify that User C has denied the friend request.
+    $this->drupalGet('user/' . $this->user_c->uid);
+    $this->assertText(t('Add friend'));
+    // User A unfriends User B.
+    $this->drupalPost('flag/confirm/unflag/friend/' . $this->user_b->uid, array(), t('Confirm'));
+    // Verify that User B is no longer a friend of User A.
+    $this->drupalGet('user/' . $this->user_b->uid);
+    $this->assertText(t('Add friend'));
+
+    // Log in as User B.
+    $this->drupalLogin($this->user_b);
+    // Verify that User A is no longer a friend of User B.
+    $this->drupalGet('user/' . $this->user_a->uid);
+    $this->assertText(t('Add friend'));
+    // Verify that User C has cancelled the request to User B.
+    $this->drupalGet('user/' . $this->user_c->uid);
+    $this->assertText(t('Add friend'));
+  }
+}

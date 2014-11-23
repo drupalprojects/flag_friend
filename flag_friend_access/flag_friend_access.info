@@ -5,3 +5,4 @@ dependencies[] = flag_friend
 core = 7.x
 files[] = flag_friend_access.install
 files[] = flag_friend_access.module
+files[] = tests/FlagFriendAccessNodeTestCase.test

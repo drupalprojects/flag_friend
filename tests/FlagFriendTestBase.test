@@ -1,0 +1,110 @@
+<?php
+/**
+ * @file
+ * Contains the FlagFriendTestBase class.
+ */
+
+/**
+ * Base class for Flag Friend tests.
+ *
+ * Flag Friend tests involve a rather complicated set up with multiple users
+ * and permissions. To make writing tests easier, this base class does all of
+ * the setup for you. The class is abstract so you can subclass it as needed.
+ */
+abstract class FlagFriendTestBase extends DrupalWebTestCase{
+
+  var $admin_user;
+  var $user_a;
+  var $user_b;
+  var $user_c;
+
+  /**
+   * Set up the testing environment.
+   */
+  public function setUp() {
+    // Load the flag and flag_friend modules.
+    parent::setUp('flag', 'flag_friend', 'views', 'flag_friend_access');
+
+    // Rebuild the node access permissions, otherwise Drupal will not build
+    // any new access permissions.
+    node_access_rebuild();
+
+    // Finish set up.
+    $this->createUsers();
+    $this->adminConfig();
+    $this->addFriendsAndRequests();
+  }
+
+  /**
+   * Create the administrator user and users A, B, and C.
+   */
+  protected function createUsers() {
+    // Create Admin User.
+    $this->admin_user = $this->drupalCreateUser(array(
+      'administer flags',
+      'administer users'
+    ));
+
+    $user_permissions = array(
+      'receive friend email notification',
+      'access user profiles',
+      'create article content',
+      'edit own article content',
+    );
+
+    // Create User A.
+    $this->user_a = $this->drupalCreateUser($user_permissions);
+
+    // Create User B.
+    $this->user_b = $this->drupalCreateUser($user_permissions);
+
+    // Create User C.
+    $this->user_c = $this->drupalCreateUser($user_permissions);
+  }
+
+  /**
+   * Grant flag and unflag permission to all authenticated users.
+   */
+  protected function adminConfig() {
+    $this->drupalLogin($this->admin_user);
+    $edit = array(
+      'roles[flag][2]' => TRUE,
+      'roles[unflag][2]' => TRUE,
+    );
+    $this->drupalPost('admin/structure/flags/manage/friend', $edit, t('Save flag'));
+  }
+
+  /**
+   * Set up friendships and friend requests.
+   */
+  protected function addFriendsAndRequests() {
+    // Log in as User A.
+    $this->drupalLogin($this->user_a);
+    //  User A sends friend request to User B.
+    $edit = array(
+      'flag_friend_message' => t('Can I be your friend?'),
+    );
+    $this->drupalPost('flag/confirm/flag/friend/' . $this->user_b->uid, $edit, t('Send'));
+    //  User A sends friend request to User C.
+    $edit = array(
+      'flag_friend_message' => t('Can I be your friend?'),
+    );
+    $this->drupalPost('flag/confirm/flag/friend/' . $this->user_c->uid, $edit, t('Send'));
+
+    // Log in as User B.
+    $this->drupalLogin($this->user_b);
+    // User B approves friend request from User A.
+    $edit = array(
+      'flag_friend_message' => t('Hello, Friend!'),
+    );
+    $this->drupalPost('flag/confirm/flag/friend/' . $this->user_a->uid, $edit, t('Send'));
+
+    //Log in as User C.
+    $this->drupalLogin($this->user_c);
+    //  User C sends friend request to User B.
+    $edit = array(
+      'flag_friend_message' => t('Can I be your friend?'),
+    );
+    $this->drupalPost('flag/confirm/flag/friend/' . $this->user_b->uid, $edit, t('Send'));
+  }
+}
