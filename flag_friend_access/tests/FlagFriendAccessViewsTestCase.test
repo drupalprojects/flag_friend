@@ -1,0 +1,114 @@
+<?php
+/**
+ * @file
+ * Contains Flag Friend Access views tests.
+ */
+
+// Include the FlagFriendTestBase class so run-tests.sh doesn't choke.
+require_once(drupal_get_path('module', 'flag_friend') . '/tests/FlagFriendTestBase.test');
+
+/**
+ * Class FlagFriendAccessViewsTestCase
+ */
+class FlagFriendAccessViewsTestCase extends FlagFriendTestBase {
+
+  /**
+   * {@inheritdoc]
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Flag Friend Access Views',
+      'description' => 'Tests friend access views and handlers.',
+      'group' => 'Flag Friend',
+    );
+  }
+
+  /**
+   * Creates a node with the given friends access level.
+   *
+   * @param int $access
+   *  The friends access level of the created node. It must be one of the following:
+   *  - FLAG_FRIEND_ACCESS_PUBLIC
+   *  - FLAG_FRIEND_ACCESS_FRIENDS_ONLY
+   *  - FLAG_FRIEND_ACCESS_PRIVATE
+   *  If no value is specified, FLAG_FRIEND_ACCESS_PUBLIC is used.
+   *
+   * @return string
+   */
+  protected function createNode($access = FLAG_FRIEND_ACCESS_PUBLIC) {
+    // Generate a random name to identify the node.
+    $random_title = $this->randomName();
+
+    // Create a public node.
+    $edit = array(
+      'title' => $random_title,
+      'body[und][0][value]' => $this->randomString(512),
+      'flag_friend_access' => $access,
+    );
+    $this->drupalPost('node/add/article', $edit, t('Save'));
+
+    // Return the identifier.
+    return $random_title;
+  }
+
+  /**
+   * Navigates to the access view as the current user and apply the given filter.
+   *
+   * @param string $filter
+   *  The filter value to apply.
+   */
+  protected function goToAccessViewWithFilter($filter) {
+    // Get the current user ID.
+    $uid = $this->loggedInUser->uid;
+
+    // Navigate to the access view and apply the given filter.
+    $options = array(
+      'query' => array(
+        'status_1' => $filter,
+      ),
+    );
+    $this->drupalGet('user/' . $uid . '/friends/access', $options);
+  }
+
+  /**
+   * Test the default Flag Friend Access view.
+   */
+  public function testFlagFriendAccessViews() {
+    // Login as user A.
+    $this->drupalLogin($this->user_a);
+
+    // Create nodes.
+    $node_title_public = $this->createNode(FLAG_FRIEND_ACCESS_PUBLIC);
+    $node_title_friends = $this->createNode(FLAG_FRIEND_ACCESS_FRIENDS_ONLY);
+    $node_title_private = $this->createNode(FLAG_FRIEND_ACCESS_PRIVATE);
+
+    // Go to the access view and see if all three nodes are there.
+    $this->drupalGet('user/' . $this->user_a->uid . '/friends/access');
+    $this->assertText($node_title_public);
+    $this->assertText($node_title_friends);
+    $this->assertText($node_title_private);
+
+    // Now check if the access levels are displayed.
+    $this->assertText(t('Everyone'));
+    $this->assertText(t('Only my friends'));
+    $this->assertText(t('Just me'));
+
+    // Test the public access filter.
+    $this->goToAccessViewWithFilter(FLAG_FRIEND_ACCESS_PUBLIC);
+    $this->assertText($node_title_public);
+    $this->assertNoText($node_title_friends);
+    $this->assertNoText($node_title_private);
+
+    // Test the friends-only access filter.
+    $this->goToAccessViewWithFilter(FLAG_FRIEND_ACCESS_FRIENDS_ONLY);
+    $this->assertNoText($node_title_public);
+    $this->assertText($node_title_friends);
+    $this->assertNoText($node_title_private);
+
+    // Test the private access filter.
+    $this->goToAccessViewWithFilter(FLAG_FRIEND_ACCESS_PRIVATE);
+    $this->assertNoText($node_title_public);
+    $this->assertNoText($node_title_friends);
+    $this->assertText($node_title_private);
+  }
+}

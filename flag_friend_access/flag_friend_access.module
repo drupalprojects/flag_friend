@@ -5,8 +5,19 @@
  * have access to it
  */
 
+/**
+ * Default access value, Flag Friend Access will not restrict access.
+ */
 define('FLAG_FRIEND_ACCESS_PUBLIC', 0);
+
+/**
+ * Friend access status where the author's friends may view the node.
+ */
 define('FLAG_FRIEND_ACCESS_FRIENDS_ONLY', 1);
+
+/**
+ * Friend access status where only the author may view the node.
+ */
 define('FLAG_FRIEND_ACCESS_PRIVATE', 2);
 
 /**
@@ -171,4 +182,14 @@ function flag_friend_access_node_update($node) {
 
     node_access_acquire_grants($node);
   }
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function flag_friend_access_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'flag_friend_access') . '/includes',
+  );
 }

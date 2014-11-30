@@ -3,6 +3,6 @@
 
 # Ignore patches
 *.patch
-
+interdiff*txt
 #Ignore vi swap files
 *.swp

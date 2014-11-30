@@ -69,7 +69,7 @@ function flag_friend_access_update_7001() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0,
+        'default' => FLAG_FRIEND_ACCESS_PUBLIC,
       ),
     ),
     'primary key' => array('nid'),
@@ -86,7 +86,7 @@ function flag_friend_access_update_7002() {
   $select = db_select('node', 'n')->fields('n', array('nid', 'uid'));
 
   // Add a 0 to each result row, we'll use it for the status column later.
-  $select->addExpression(0);
+  $select->addExpression(FLAG_FRIEND_ACCESS_PUBLIC);
 
   // Insert the results into the new FFA table.
   db_insert('flag_friend_access')

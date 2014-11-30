@@ -34,9 +34,9 @@ class FlagFriendAccessNodeTestCase extends FlagFriendTestBase {
     $this->drupalGet('node/add/article');
 
     $this->assertText('Friend Access Control');
-    $this->assertFieldById('edit-flag-friend-access-0', 0);
-    $this->assertFieldById('edit-flag-friend-access-1', 1);
-    $this->assertFieldById('edit-flag-friend-access-2', 2);
+    $this->assertFieldById('edit-flag-friend-access-0', FLAG_FRIEND_ACCESS_PUBLIC);
+    $this->assertFieldById('edit-flag-friend-access-1', FLAG_FRIEND_ACCESS_FRIENDS_ONLY);
+    $this->assertFieldById('edit-flag-friend-access-2', FLAG_FRIEND_ACCESS_PRIVATE);
     $this->assertFieldChecked('edit-flag-friend-access-0');
     $this->assertNoFieldChecked('edit-flag-friend-access-1');
     $this->assertNoFieldChecked('edit-flag-friend-access-2');
