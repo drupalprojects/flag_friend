@@ -15,13 +15,23 @@ function flag_friend_install() {
 /**
  * Implements hook_uninstall().
  *
- * @TODO: We should consider removing all friend flags when uninstalling...
  */
 function flag_friend_uninstall() {
-  // Remove default flag if it's enabled.
-  if ($flag = flag_get_flag('friend')) {
-    $flag->delete();
+  // Drop all flag friend tables.
+  foreach (array_keys(flag_friend_schema()) as $table) {
+    db_drop_table($table);
   }
+
+  // Remove default flag if it's enabled.
+  if (function_exists('flag_get_flag')) {
+    if ($flag = flag_get_flag('friend')) {
+      $flag->delete();
+    }
+  }
+
+  // Clear the cache.
+  drupal_flush_all_caches();
+
   drupal_set_message(st('The flag_friend module was successfully uninstalled.'));
 }
 
