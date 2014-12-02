@@ -42,6 +42,32 @@ class FlagFriendAccessNodeTestCase extends FlagFriendTestBase {
     $this->assertNoFieldChecked('edit-flag-friend-access-2');
   }
 
+  public function testUserSetting() {
+    // Log in as User A.
+    $this->drupalLogin($this->user_a);
+
+    $this->drupalGet('user/' . $this->user_a->uid . '/edit');
+    $this->assertFieldChecked('edit-flag-friend-access-default-0');
+    $this->drupalGet('node/add/article');
+    $this->assertFieldChecked('edit-flag-friend-access-0');
+
+    $edit = array(
+      'flag_friend_access_default' => FLAG_FRIEND_ACCESS_FRIENDS_ONLY,
+    );
+    $this->drupalPost('user/' . $this->user_a->uid . '/edit', $edit, t('Save'));
+    $this->assertFieldChecked('edit-flag-friend-access-default-1');
+    $this->drupalGet('node/add/article');
+    $this->assertFieldChecked('edit-flag-friend-access-1');
+
+    $edit = array(
+      'flag_friend_access_default' => FLAG_FRIEND_ACCESS_PRIVATE,
+    );
+    $this->drupalPost('user/' . $this->user_a->uid . '/edit', $edit, t('Save'));
+    $this->assertFieldChecked('edit-flag-friend-access-default-2');
+    $this->drupalGet('node/add/article');
+    $this->assertFieldChecked('edit-flag-friend-access-2');
+  }
+
   /**
    * Create a private node and test friend access to it.
    */
@@ -85,7 +111,7 @@ class FlagFriendAccessNodeTestCase extends FlagFriendTestBase {
     $edit = array(
       'title' => $random_title,
       'body[und][0][value]' => $this->randomString(512),
-      'flag_friend_access' => '1', // FLAG_FRIEND_ACCESS_FRIENDS_ONLY
+      'flag_friend_access' => FLAG_FRIEND_ACCESS_FRIENDS_ONLY,
     );
     $this->drupalPost('node/add/article', $edit, t('Save'));
     $node_url = $this->getUrl();

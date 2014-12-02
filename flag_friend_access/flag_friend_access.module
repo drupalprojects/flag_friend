@@ -75,6 +75,8 @@ function flag_friend_access_node_access_records($node) {
  * Implements hook_form_alter().
  */
 function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
   // add in a checkbox only if the
   if (isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id) {
     // We have a node form alter in our stuff.
@@ -83,7 +85,17 @@ function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('Friend Access Control'),
       '#collapsable' => FALSE,
     );
-    $access_value = isset($form['#node']->nid) ? flag_friend_access_value($form['#node']->nid) : FALSE;
+
+    // Get the node's friend visibility.
+    if (isset($form['#node']->nid)) {
+      // If we're updating the node, get the node's visibility value.
+      $access_value = flag_friend_access_value($form['#node']->nid);
+    }
+    else {
+      // If this is a new node, get the user's visibility preference.
+      $access_value = flag_friend_access_default($user);
+    }
+
     $form['flag_friend_control']['flag_friend_access'] = array(
       '#type' => 'radios',
       '#title' => t('Who can see this post?'),
@@ -94,6 +106,33 @@ function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
       ),
       '#default_value' => !empty($access_value) ? $access_value : FLAG_FRIEND_ACCESS_PUBLIC,
     );
+  }
+  else if (($form_id == 'user_register_form' || $form_id == 'user_profile_form') && $form['#user_category'] == 'account') {
+    $form['flag_friend_access'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Friend Access Control'),
+      '#collapsable' => TRUE,
+    );
+    $form['flag_friend_access']['flag_friend_access_default'] = array(
+      '#type' => 'radios',
+      '#title' => t('Default visibility to use when creating content'),
+      '#options' => array(
+        FLAG_FRIEND_ACCESS_PUBLIC => t('Everyone'),
+        FLAG_FRIEND_ACCESS_FRIENDS_ONLY => t('Only my friends'),
+        FLAG_FRIEND_ACCESS_PRIVATE => t('Just me'),
+      ),
+      '#default_value' => flag_friend_access_default($form_state['user']),
+      '#description' => t('Choose who can see your content by default. You can change this on each post.'),
+    );
+  }
+}
+
+/**
+ * Implements hook_user_presave().
+ */
+function flag_friend_access_user_presave(&$edit, $account, $category) {
+  if (isset($edit['flag_friend_access_default'])) {
+    $edit['data']['flag_friend_access_default'] = $edit['flag_friend_access_default'];
   }
 }
 
@@ -182,6 +221,24 @@ function flag_friend_access_node_update($node) {
 
     node_access_acquire_grants($node);
   }
+}
+
+/**
+ * Helper function to get the user's node visibility default.
+ *
+ * @param $account
+ *  The user account to check.
+ * @return
+ *  The user default node visibility preference.
+ */
+function flag_friend_access_default($account) {
+  $access_default = 0;
+
+  if (isset($account->data['flag_friend_access_default'])) {
+    $access_default = $account->data['flag_friend_access_default'];
+  }
+
+  return $access_default;
 }
 
 /**
