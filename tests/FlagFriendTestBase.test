@@ -50,6 +50,7 @@ abstract class FlagFriendTestBase extends DrupalWebTestCase{
       'access user profiles',
       'create article content',
       'edit own article content',
+      'use flag friend access',
     );
 
     // Create User A.

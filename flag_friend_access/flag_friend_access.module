@@ -21,6 +21,18 @@ define('FLAG_FRIEND_ACCESS_FRIENDS_ONLY', 1);
 define('FLAG_FRIEND_ACCESS_PRIVATE', 2);
 
 /**
+ *  Implements hook_permission().
+ */
+function flag_friend_access_permission() {
+  return array(
+    'use flag friend access' => array(
+      'title' => t('Use Flag Friend Access'),
+      'description' => t('Allow users to restrict access to their content to their friends.')
+    ),
+  );
+}
+
+/**
  * Implements hook_node_grants().
  */
 function flag_friend_access_node_grants($account, $op) {
@@ -84,6 +96,7 @@ function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'fieldset',
       '#title' => t('Friend Access Control'),
       '#collapsable' => FALSE,
+      '#access' => user_access('use flag friend access'),
     );
 
     // Get the node's friend visibility.
@@ -112,6 +125,7 @@ function flag_friend_access_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'fieldset',
       '#title' => t('Friend Access Control'),
       '#collapsable' => TRUE,
+      '#access' => user_access('use flag friend access'),
     );
     $form['flag_friend_access']['flag_friend_access_default'] = array(
       '#type' => 'radios',
